@@ -32,6 +32,7 @@
           <a href="#" data-filter="Socorrista" data-target="funcionariosPage"><i class="ph ph-siren"></i> Socorristas</a>
         </div>
         <a href="#" data-target="veiculosPage"><i class="ph ph-ambulance"></i> Viaturas</a>
+        <a href="#" data-target="equipeMedicaPage"><i class="ph ph-users-four"></i> Equipe Médica</a>
       </nav>
       <div class="sidebar-bottom">
         <div class="sidebar-bottom-item theme-toggle-item">
@@ -693,6 +694,134 @@
           <div class="form-actions">
             <button id="saveAbastecimento" type="button">Salvar</button>
             <button id="cancelAbastecimento" type="button">Cancelar</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEÇÃO: EQUIPE MÉDICA -->
+      <section id="equipeMedicaPage" class="page">
+        <div class="page-header">
+          <div>
+            <h1>Formação de Equipes Médicas</h1>
+            <p class="subtitle">Montagem e controle de equipes temporárias de saúde</p>
+          </div>
+          <button id="addEquipeBtn" type="button"><i class="ph ph-plus-circle"></i> Nova Equipe</button>
+        </div>
+
+        <div class="page-body">
+          <!-- Lista de Equipes -->
+          <div class="tracking-sidebar" id="equipeMedicaSidebar">
+            <div id="equipeMedicaList" class="tracking-grid"></div>
+          </div>
+
+          <!-- Detalhes (oculto por padrão) -->
+          <div class="vehicle-details-panel hidden" id="equipeMedicaDetail">
+            <div class="details-top-bar">
+              <button class="close-details-btn" onclick="closeDetails('equipeMedica')">
+                <i class="ph ph-arrow-left"></i> Voltar para lista
+              </button>
+            </div>
+            <div class="details-header">
+              <div class="header-title">
+                <h2 id="detailEquipeNome">Selecione uma Equipe</h2>
+                <span id="detailEquipeStatus" class="status-badge badge-available"><i class="ph ph-users"></i> Ativa</span>
+              </div>
+            </div>
+
+            <div class="details-tabs">
+              <button class="tab active">Informações da Equipe</button>
+            </div>
+
+            <div class="details-content">
+              <div class="large-vehicle-image" style="display: flex; justify-content: center; align-items: center; background: var(--bg-secondary); border-radius: 12px; padding: 2rem;">
+                <i class="ph ph-users-three" style="font-size: 100px; color: var(--text-muted);"></i>
+              </div>
+
+              <div class="vehicle-info-grid">
+                <div class="info-box">
+                  <p>Data / Período</p>
+                  <h4 id="detailEquipeData">-</h4>
+                </div>
+                <div class="info-box">
+                  <p>Turno</p>
+                  <h4 id="detailEquipeTurno">-</h4>
+                </div>
+                <div class="info-box full-width">
+                  <p>Profissionais da Equipe</p>
+                  <div id="detailEquipeMembrosList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Lista de profissionais com badges -->
+                  </div>
+                </div>
+                <div class="info-box full-width">
+                  <p>Observações</p>
+                  <p id="detailEquipeObs" style="margin-top: 8px; line-height: 1.6; color: var(--text);">-</p>
+                </div>
+              </div>
+
+              <div class="admin-actions">
+                <button class="btn-outline" id="btnEditEquipe"><i class="ph ph-pencil-simple"></i> Editar Equipe</button>
+                <button class="btn-outline-danger" id="btnDeleteEquipe"><i class="ph ph-trash"></i> Remover Equipe</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODAL CADASTRO DE EQUIPE MÉDICA -->
+        <div id="equipeMedicaModal" class="modal-overlay hidden">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3><i class="ph ph-users-four"></i> Formar Equipe Médica</h3>
+              <button class="close-modal-btn" id="closeEquipeMedicaModal"><i class="ph ph-x"></i></button>
+            </div>
+
+            <div class="modal-body form-grid">
+              <div class="form-group full-width">
+                <label>Nome da Equipe</label>
+                <input id="inputEquipeNome" placeholder="EX: Equipe de Plantão - Sábado" />
+              </div>
+
+              <div class="form-group">
+                <label>Data</label>
+                <input id="inputEquipeData" type="date" />
+              </div>
+
+              <div class="form-group">
+                <label>Turno</label>
+                <select id="inputEquipeTurno">
+                  <option value="Manhã">Manhã</option>
+                  <option value="Tarde">Tarde</option>
+                  <option value="Noite">Noite</option>
+                  <option value="Integral">Integral</option>
+                </select>
+              </div>
+
+              <!-- Selecionar Profissionais -->
+              <div class="form-group full-width">
+                <label>Adicionar Membro à Equipe</label>
+                <div class="autocomplete-container">
+                  <input id="inputEquipeMembroBuscar" placeholder="Buscar profissional por nome..." autocomplete="off" />
+                  <ul id="equipeMembroSugestoes" class="sugestoes hidden"></ul>
+                </div>
+              </div>
+
+              <!-- Lista de Membros Selecionados (Chips) -->
+              <div class="form-group full-width">
+                <label>Profissionais Selecionados</label>
+                <div id="equipeMembrosChipsContainer" style="display: flex; flex-wrap: wrap; gap: 8px; min-height: 46px; padding: 10px; border: 1px dashed var(--border); border-radius: 12px; background: var(--bg-card);">
+                  <span style="color: var(--text-muted); font-size: 13px;">Nenhum profissional selecionado</span>
+                </div>
+              </div>
+
+              <div class="form-group full-width">
+                <label>Observações / Notas</label>
+                <textarea id="inputEquipeObs" rows="3" placeholder="Informações adicionais sobre o plantão ou equipe..." style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 12px; font-family: 'Inter', sans-serif; resize: vertical;"></textarea>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button id="cancelEquipeMedica" class="btn-outline-danger">Cancelar</button>
+              <button id="saveEquipeMedica" class="btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Equipe</button>
+            </div>
           </div>
         </div>
       </section>

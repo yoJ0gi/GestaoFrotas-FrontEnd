@@ -505,7 +505,8 @@ html:not(.dark) .sidebar-bottom-item:hover {
 
 #addVeiculoBtn,
 #addFuncionarioBtn,
-#addOcorrenciaBtn {
+#addOcorrenciaBtn,
+#addEquipeBtn {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -522,14 +523,16 @@ html:not(.dark) .sidebar-bottom-item:hover {
 
 #addVeiculoBtn:hover,
 #addFuncionarioBtn:hover,
-#addOcorrenciaBtn:hover {
+#addOcorrenciaBtn:hover,
+#addEquipeBtn:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 25px rgba(59, 130, 246, 0.35);
 }
 
 #addVeiculoBtn i,
 #addFuncionarioBtn i,
-#addOcorrenciaBtn i {
+#addOcorrenciaBtn i,
+#addEquipeBtn i {
   font-size: 22px;
 }
 
