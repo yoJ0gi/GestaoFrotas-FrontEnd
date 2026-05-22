@@ -1,47 +1,92 @@
 const API = "http://localhost:3000/api";
 
-let motoristaEditandoId = null;
+let funcionarioEditandoId = null;
 let veiculoEditandoId = null;
 let manutencaoEditandoId = null;
 let abastecimentoEditandoId = null;
 let ocorrenciaEditandoId = null;
-let equipeEditandoId = null;
 
-let motoristasCache = [];
-let veiculosCache = [];
-let equipeCache = [
-  { id: 1, nome: "Dr. Marcos Paulo", cargo: "Médico", registro: "CRM-12345", telefone: "(11) 98888-0000", email: "marcos@hospital.com", status: "Disponível" },
-  { id: 2, nome: "Enf. Joana Silva", cargo: "Enfermeiro", registro: "COREN-54321", telefone: "(11) 97777-1111", email: "joana@hospital.com", status: "Em Rota" }
+let funcionariosCache = [
+  { id: 1, nome: "Carlos Silva", cargo: "Motorista", cpf: "111.222.333-44", apto_dirigir: "Sim", cnh: "123456789", validade_cnh: "2026-10-12", registro: "", idade: 45, telefone: "(11) 99999-1111", email: "carlos@exemplo.com", status: "Disponível" },
+  { id: 2, nome: "Ana Santos", cargo: "Motorista", cpf: "222.333.444-55", apto_dirigir: "Sim", cnh: "987654321", validade_cnh: "2025-05-20", registro: "", idade: 38, telefone: "(11) 98888-2222", email: "ana@exemplo.com", status: "Disponível" },
+  { id: 3, nome: "Dr. Marcos Paulo", cargo: "Médico", cpf: "333.444.555-66", apto_dirigir: "Não", cnh: "", validade_cnh: "", registro: "CRM-12345", idade: 42, telefone: "(11) 98888-0000", email: "marcos@hospital.com", status: "Disponível" },
+  { id: 4, nome: "Enf. Joana Silva", cargo: "Enfermeiro", cpf: "444.555.666-77", apto_dirigir: "Não", cnh: "", validade_cnh: "", registro: "COREN-54321", idade: 36, telefone: "(11) 97777-1111", email: "joana@hospital.com", status: "Em Rota" },
+  { id: 5, nome: "Pedro Almeida", cargo: "Socorrista", cpf: "555.666.777-88", apto_dirigir: "Não", cnh: "", validade_cnh: "", registro: "SOC-98765", idade: 29, telefone: "(11) 96666-3333", email: "pedro@hospital.com", status: "Disponível" }
 ];
+let veiculosCache = [];
 let ocorrenciasCache = [
   { id: 1, titulo: "Mal súbito", prioridade: "Alta", status: "Ativa", veiculo_nome: "AMB-1020", equipe_nome: "Dr. Marcos Paulo", paciente: "João das Neves", endereco: "Av. Paulista, 1000", descricao: "Paciente inconsciente na rua.", data: "2026-05-19" },
   { id: 2, titulo: "Acidente de Trânsito", prioridade: "Crítica", status: "Em Atendimento", veiculo_nome: "HOS-4B21", equipe_nome: "Enf. Joana Silva", paciente: "Desconhecido", endereco: "Rodovia Castelo Branco, km 15", descricao: "Colisão entre dois carros.", data: "2026-05-18" }
 ];
 
-document.querySelectorAll(".sidebar-nav-main a").forEach((link) => {
+document.querySelectorAll(".sidebar-nav-main a, .sidebar-submenu a").forEach((link) => {
   link.addEventListener("click", (e) => {
     e.preventDefault();
+    
+    // Sub-link clicked logic
+    if (link.closest(".sidebar-submenu")) {
+      const filter = link.getAttribute("data-filter");
+      currentFuncionarioFilter = filter;
+      
+      // Update sub-link active state
+      document.querySelectorAll(".sidebar-submenu a").forEach(sub => sub.classList.remove("active"));
+      link.classList.add("active");
+      
+      // Highlight parent link
+      const parentLink = document.querySelector('[data-target="funcionariosPage"]');
+      if (parentLink) {
+        document.querySelectorAll(".sidebar-nav-main a").forEach(l => {
+          if (!l.closest(".sidebar-submenu")) l.classList.remove("active");
+        });
+        parentLink.classList.add("active");
+      }
+      
+      showPage("funcionariosPage");
+      return;
+    }
+
     const target = link.getAttribute("data-target");
+    
+    // Parent link clicked
+    if (target === "funcionariosPage") {
+      currentFuncionarioFilter = null;
+      document.querySelectorAll(".sidebar-submenu a").forEach(sub => sub.classList.remove("active"));
+    }
+
     showPage(target);
   });
 });
 
 function showPage(pageId) {
   document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
-  document.querySelectorAll(".sidebar-nav-main a").forEach((l) => l.classList.remove("active"));
+  document.querySelectorAll(".sidebar-nav-main a").forEach((l) => {
+    if (!l.closest(".sidebar-submenu")) l.classList.remove("active");
+  });
 
-  document.getElementById(pageId).classList.add("active");
-  document.querySelector(`[data-target="${pageId}"]`).classList.add("active");
+  const pageEl = document.getElementById(pageId);
+  if (pageEl) pageEl.classList.add("active");
+
+  const targetLink = document.querySelector(`[data-target="${pageId}"]:not(.sidebar-submenu a)`);
+  if (targetLink) targetLink.classList.add("active");
+
+  // Handle submenu open/close
+  const submenu = document.getElementById("funcionariosSubmenu");
+  if (submenu) {
+    if (pageId === "funcionariosPage") {
+      submenu.classList.add("open");
+    } else {
+      submenu.classList.remove("open");
+    }
+  }
 
   loadPageData(pageId);
 }
 
 // ================= SHOW/CLOSE DETAILS =================
 const panelMap = {
-  veiculos:    { sidebar: 'veiculosSidebar',    detail: 'veiculosDetail' },
-  motoristas:  { sidebar: 'motoristasSidebar',  detail: 'motoristasDetail' },
-  equipe:      { sidebar: 'equipeSidebar',      detail: 'equipeDetail' },
-  ocorrencias: { sidebar: 'ocorrenciasSidebar', detail: 'ocorrenciasDetail' }
+  veiculos:     { sidebar: 'veiculosSidebar',     detail: 'veiculosDetail' },
+  funcionarios: { sidebar: 'funcionariosSidebar', detail: 'funcionariosDetail' },
+  ocorrencias:  { sidebar: 'ocorrenciasSidebar',  detail: 'ocorrenciasDetail' }
 };
 
 function showDetails(section) {
@@ -91,21 +136,35 @@ if (themeToggle) {
 
 initTheme();
 
-let usingMockMotoristas = false;
+let usingMockFuncionarios = false;
 
-async function loadMotoristasCache() {
-  if (usingMockMotoristas) return;
+async function loadFuncionariosCache() {
+  if (usingMockFuncionarios) return;
   try {
     const res = await fetch(API + "/motoristas");
     if (!res.ok) throw new Error("API failed");
-    motoristasCache = await res.json();
+    const motoristas = await res.json();
+    
+    const nonMotoristas = funcionariosCache.filter(f => f.cargo !== "Motorista");
+    const fetchedMotoristas = motoristas.map(m => ({
+      id: m.id,
+      nome: m.nome,
+      cargo: "Motorista",
+      cpf: m.cpf || "",
+      apto_dirigir: "Sim",
+      cnh: m.cnh || "",
+      validade_cnh: m.validade_cnh || "",
+      registro: "",
+      idade: m.idade || "",
+      telefone: m.telefone || "",
+      email: m.email || "",
+      status: m.status || "Disponível"
+    }));
+    
+    funcionariosCache = [...fetchedMotoristas, ...nonMotoristas];
   } catch (err) {
-    console.warn("Backend offline, mock data para motoristas");
-    usingMockMotoristas = true;
-    motoristasCache = [
-      { id: 1, nome: "Carlos Silva", idade: 45, cpf: "111.222.333-44", cnh: "123456789", validade_cnh: "2026-10-12", telefone: "(11) 99999-1111", email: "carlos@exemplo.com" },
-      { id: 2, nome: "Ana Santos", idade: 38, cpf: "222.333.444-55", cnh: "987654321", validade_cnh: "2025-05-20", telefone: "(11) 98888-2222", email: "ana@exemplo.com" }
-    ];
+    console.warn("Backend offline ou erro, usando mock data unificado");
+    usingMockFuncionarios = true;
   }
 }
 
@@ -168,8 +227,8 @@ function initAutocompletes() {
   setupAutocomplete(
     "inputMotorista",
     "motoristaSugestoes",
-    () => motoristasCache,
-    (m) => `${m.nome} (${m.cpf || "sem CPF"})`
+    () => funcionariosCache.filter(f => f.cargo === "Motorista" || f.apto_dirigir === "Sim"),
+    (m) => `${m.nome} (${m.cargo})`
   );
 
   setupAutocomplete(
@@ -196,24 +255,29 @@ function initAutocompletes() {
   setupAutocomplete(
     "inputOcorrenciaEquipe",
     "ocorrenciaEquipeSugestoes",
-    () => equipeCache,
+    () => funcionariosCache.filter(f => f.cargo !== "Motorista"),
     (e) => `${e.nome} (${e.cargo})`
   );
 }
 
 async function loadDashboard() {
   try {
-    const [v, m, man, ab] = await Promise.all([
-      fetch(API + "/veiculos").then(r => r.json()).catch(() => veiculosCache),
-      fetch(API + "/motoristas").then(r => r.json()).catch(() => []),
-      fetch(API + "/manutencoes").then(r => r.json()).catch(() => []),
-      fetch(API + "/abastecimentos").then(r => r.json()).catch(() => [])
+    await Promise.all([
+      loadVeiculosCache(),
+      loadFuncionariosCache()
     ]);
 
-    totalOcorrencias.textContent = ocorrenciasCache.length;
-    viaturasRota.textContent = veiculosCache.length;
-    equipeDisponivel.textContent = equipeCache.length;
+    const totalOcorrenciasEl = document.getElementById("totalOcorrencias");
+    const viaturasRotaEl = document.getElementById("viaturasRota");
+    const equipeDisponivelEl = document.getElementById("equipeDisponivel");
     const totalViaturasEl = document.getElementById('totalViaturas');
+
+    if (totalOcorrenciasEl) totalOcorrenciasEl.textContent = ocorrenciasCache.length;
+    if (viaturasRotaEl) viaturasRotaEl.textContent = veiculosCache.length;
+    
+    const disponiveis = funcionariosCache.filter(f => f.status === "Disponível").length;
+    if (equipeDisponivelEl) equipeDisponivelEl.textContent = disponiveis;
+    
     if (totalViaturasEl) totalViaturasEl.textContent = veiculosCache.length;
   } catch(e) {}
 }
@@ -407,52 +471,69 @@ async function deleteVeiculo(id) {
   loadVeiculos();
 }
 
-let selectedMotoristaId = null;
+let selectedFuncionarioId = null;
+let currentFuncionarioFilter = null;
 
-async function loadMotoristas() {
-  await loadMotoristasCache();
+async function loadFuncionarios(filter = null) {
+  await loadFuncionariosCache();
 
-  const list = document.getElementById("motoristasList");
+  const titleEl = document.getElementById("funcionariosPageTitle");
+  const subtitleEl = document.getElementById("funcionariosPageSubtitle");
+  if (titleEl) {
+    titleEl.textContent = filter ? filter + "s" : "Funcionários";
+  }
+  if (subtitleEl) {
+    subtitleEl.textContent = filter 
+      ? `Listando todos os ${filter.toLowerCase()}s vinculados à frota hospitalar` 
+      : "Todos os profissionais vinculados à frota hospitalar";
+  }
+
+  const list = document.getElementById("funcionariosList");
   if (list) list.innerHTML = "";
 
-  const badge = document.getElementById("badgeTotalMotoristas");
-  if (badge) badge.textContent = motoristasCache.length;
+  const filtered = filter 
+    ? funcionariosCache.filter(f => f.cargo === filter)
+    : funcionariosCache;
 
-  motoristasCache.forEach(m => {
+  filtered.forEach(f => {
     const card = document.createElement("div");
     card.className = "tracking-card";
-    card.dataset.id = m.id;
-    if (m.id === selectedMotoristaId) card.classList.add("selected");
+    card.dataset.id = f.id;
+    if (f.id === selectedFuncionarioId) card.classList.add("selected");
+
+    let statusBadge = `<span class="status-badge badge-available"><i class="ph ph-check-circle"></i> Disponível</span>`;
+    if (f.status === "Em Rota") {
+      statusBadge = `<span class="status-badge badge-route"><i class="ph ph-navigation-arrow"></i> Em Rota</span>`;
+    }
 
     card.innerHTML = `
       <div class="tc-header">
-        <h3>${m.nome}</h3>
-        <span class="status-badge badge-available">
-          <i class="ph ph-check-circle"></i> Ativo
-        </span>
+        <h3>${f.nome}</h3>
+        ${statusBadge}
+      </div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">
+        ${f.cargo} ${f.registro ? '| ' + f.registro : ''}
       </div>
       <div class="tc-image" style="display: flex; justify-content: center; align-items: center; padding: 1rem 0;">
         <i class="ph ph-user-circle" style="font-size: 64px; color: var(--text-muted);"></i>
       </div>
     `;
 
-    card.onclick = () => selectMotorista(m.id);
-
+    card.onclick = () => selectFuncionario(f.id);
     if (list) list.appendChild(card);
   });
 
-  closeDetails('motoristas');
+  closeDetails('funcionarios');
 }
 
-function selectMotorista(id) {
-  selectedMotoristaId = id;
-  const m = motoristasCache.find(mo => mo.id === id);
-  if (!m) return;
+function selectFuncionario(id) {
+  selectedFuncionarioId = id;
+  const f = funcionariosCache.find(func => func.id == id);
+  if (!f) return;
 
-  // Update selected class on cards
-  const cards = document.querySelectorAll("#motoristasList .tracking-card");
+  const cards = document.querySelectorAll("#funcionariosList .tracking-card");
   cards.forEach(card => {
-    if (Number(card.dataset.id) === Number(id)) {
+    if (card.dataset.id == id) {
       card.classList.add("selected");
     } else {
       card.classList.remove("selected");
@@ -460,124 +541,277 @@ function selectMotorista(id) {
   });
 
   const el = docId => document.getElementById(docId);
-  if(el("detailMotoristaNome")) el("detailMotoristaNome").textContent = m.nome || 'Sem Nome';
-  if(el("detailMotoristaStatus")) {
-    el("detailMotoristaStatus").className = `status-badge badge-available`;
-    el("detailMotoristaStatus").innerHTML = `<i class="ph ph-check-circle"></i> Ativo`;
-  }
-  if(el("detailMotoristaIdade")) el("detailMotoristaIdade").textContent = m.idade ? `${m.idade} anos` : '-';
-  if(el("detailMotoristaCpf")) el("detailMotoristaCpf").textContent = m.cpf || '-';
-  if(el("detailMotoristaCnh")) el("detailMotoristaCnh").textContent = m.cnh || '-';
-  if(el("detailMotoristaValidadeCnh")) {
-    if(m.validade_cnh) {
-      const parts = m.validade_cnh.split("-");
-      el("detailMotoristaValidadeCnh").textContent = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : m.validade_cnh;
+  
+  if (el("detailFuncNome")) el("detailFuncNome").textContent = f.nome || 'Sem Nome';
+  if (el("detailFuncStatus")) {
+    const statusEl = el("detailFuncStatus");
+    if (f.status === "Em Rota") {
+      statusEl.className = "status-badge badge-route";
+      statusEl.innerHTML = `<i class="ph ph-navigation-arrow"></i> Em Rota`;
     } else {
-      el("detailMotoristaValidadeCnh").textContent = '-';
+      statusEl.className = "status-badge badge-available";
+      statusEl.innerHTML = `<i class="ph ph-check-circle"></i> Disponível`;
     }
   }
-  if(el("detailMotoristaTelefone")) el("detailMotoristaTelefone").textContent = m.telefone || '-';
-  if(el("detailMotoristaEmail")) el("detailMotoristaEmail").textContent = m.email || '-';
 
-  const btnEdit = el("btnEditMotorista");
-  if(btnEdit) btnEdit.onclick = () => editMotorista(m.id);
+  if (el("detailFuncCargo")) el("detailFuncCargo").textContent = f.cargo || '-';
+  if (el("detailFuncIdade")) el("detailFuncIdade").textContent = f.idade ? `${f.idade} anos` : '-';
+  if (el("detailFuncCpf")) el("detailFuncCpf").textContent = f.cpf || '-';
+  if (el("detailFuncTelefone")) el("detailFuncTelefone").textContent = f.telefone || '-';
+  if (el("detailFuncEmail")) el("detailFuncEmail").textContent = f.email || '-';
+  if (el("detailFuncApto")) el("detailFuncApto").textContent = f.apto_dirigir || "Não";
 
-  const btnDel = el("btnDeleteMotorista");
-  if(btnDel) btnDel.onclick = () => {
-    if(confirm(`Tem certeza que deseja remover o motorista ${m.nome}?`)) {
-      deleteMotorista(m.id);
-    }
-  };
+  const cnhBox = el("detailFuncCnhBox");
+  const validadeCnhBox = el("detailFuncValidadeCnhBox");
+  const registroBox = el("detailFuncRegistroBox");
 
-  showDetails('motoristas');
-}
+  // Visibilidade condicional de CNH com base em Aptidão
+  if (f.apto_dirigir === "Sim") {
+    if (cnhBox) cnhBox.style.display = "block";
+    if (validadeCnhBox) validadeCnhBox.style.display = "block";
 
-document.getElementById("addMotoristaBtn").onclick = () => {
-  motoristaEditandoId = null;
-  resetMotoristaForm();
-  document.getElementById("saveMotorista").innerHTML = '<i class="ph ph-floppy-disk"></i> Salvar Motorista';
-  document.getElementById("motoristaModal").classList.remove("hidden");
-};
-
-function resetMotoristaForm() {
-  ["inputNomeMotorista", "inputCPF", "inputTelefone", "inputIdadeMotorista", "inputCNH", "inputValidadeCNH", "inputEmail"].forEach(id => {
-    document.getElementById(id).value = "";
-  });
-  document.getElementById("motoristaModal").classList.add("hidden");
-}
-
-document.getElementById("cancelMotorista").onclick = resetMotoristaForm;
-const closeMotoristaModalBtn = document.getElementById("closeMotoristaModal");
-if (closeMotoristaModalBtn) closeMotoristaModalBtn.onclick = resetMotoristaForm;
-
-document.getElementById("saveMotorista").onclick = async () => {
-  const data = {
-    nome: inputValue("inputNomeMotorista"),
-    cpf: inputValue("inputCPF"),
-    telefone: inputValue("inputTelefone"),
-    idade: inputValue("inputIdadeMotorista"),
-    cnh: inputValue("inputCNH"),
-    validade_cnh: inputValue("inputValidadeCNH"),
-    email: inputValue("inputEmail")
-  };
-
-  const method = motoristaEditandoId ? "PUT" : "POST";
-  const url = motoristaEditandoId ? `${API}/motoristas/${motoristaEditandoId}` : `${API}/motoristas`;
-
-  try {
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error("API Error");
-  } catch (err) {
-    if (usingMockMotoristas) {
-      if (motoristaEditandoId) {
-        const idx = motoristasCache.findIndex(m => m.id == motoristaEditandoId);
-        if (idx > -1) {
-          motoristasCache[idx] = { ...motoristasCache[idx], ...data };
-        }
+    if (el("detailFuncCnh")) el("detailFuncCnh").textContent = f.cnh || '-';
+    if (el("detailFuncValidadeCnh")) {
+      if (f.validade_cnh) {
+        const parts = f.validade_cnh.split("-");
+        el("detailFuncValidadeCnh").textContent = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : f.validade_cnh;
       } else {
-        const newId = motoristasCache.length > 0 ? Math.max(...motoristasCache.map(m => m.id)) + 1 : 1;
-        motoristasCache.push({ id: newId, ...data });
-        selectedMotoristaId = newId;
+        el("detailFuncValidadeCnh").textContent = '-';
       }
     }
+  } else {
+    if (cnhBox) cnhBox.style.display = "none";
+    if (validadeCnhBox) validadeCnhBox.style.display = "none";
   }
 
-  resetMotoristaForm();
-  loadMotoristas();
-};
+  // Visibilidade condicional de Registro Profissional com base no Cargo (não-motoristas)
+  if (f.cargo === "Motorista") {
+    if (registroBox) registroBox.style.display = "none";
+  } else {
+    if (registroBox) registroBox.style.display = "block";
+    if (el("detailFuncRegistro")) el("detailFuncRegistro").textContent = f.registro || '-';
+  }
 
-async function editMotorista(id) {
-  const m = motoristasCache.find(m => m.id == id);
-  if(!m) return;
+  const btnEdit = el("btnEditFuncionario");
+  if (btnEdit) btnEdit.onclick = () => editFuncionario(f.id);
 
-  document.getElementById("inputNomeMotorista").value = m.nome || "";
-  document.getElementById("inputCPF").value = m.cpf || "";
-  document.getElementById("inputTelefone").value = m.telefone || "";
-  document.getElementById("inputIdadeMotorista").value = m.idade || "";
-  document.getElementById("inputCNH").value = m.cnh || "";
-  document.getElementById("inputValidadeCNH").value = m.validade_cnh || "";
-  document.getElementById("inputEmail").value = m.email || "";
+  const btnDel = el("btnDeleteFuncionario");
+  if (btnDel) btnDel.onclick = () => {
+    if (confirm(`Tem certeza que deseja remover o funcionário ${f.nome}?`)) {
+      deleteFuncionario(f.id);
+    }
+  };
 
-  motoristaEditandoId = id;
-  document.getElementById("saveMotorista").innerHTML = '<i class="ph ph-pencil-simple"></i> Atualizar Motorista';
-  document.getElementById("motoristaModal").classList.remove("hidden");
+  showDetails('funcionarios');
 }
 
-async function deleteMotorista(id) {
-  try {
-    const res = await fetch(`${API}/motoristas/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("API Error");
-  } catch(e) {
-    if(usingMockMotoristas) {
-      motoristasCache = motoristasCache.filter(m => m.id != id);
-      if (selectedMotoristaId == id) selectedMotoristaId = null;
+const addFuncBtn = document.getElementById("addFuncionarioBtn");
+if (addFuncBtn) {
+  addFuncBtn.onclick = () => {
+    funcionarioEditandoId = null;
+    resetFuncionarioForm();
+    document.getElementById("saveFuncionario").innerHTML = '<i class="ph ph-floppy-disk"></i> Salvar Funcionário';
+    document.getElementById("funcionarioModal").classList.remove("hidden");
+  };
+}
+
+function resetFuncionarioForm() {
+  ["inputFuncNome", "inputFuncCargo", "inputFuncCpf", "inputFuncIdade", "inputFuncTelefone", "inputFuncEmail", "inputFuncCnh", "inputFuncValidadeCnh", "inputFuncRegistro"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  
+  const aptoSelect = document.getElementById("inputFuncApto");
+  if (aptoSelect) {
+    aptoSelect.value = "Não";
+    aptoSelect.disabled = false;
+  }
+
+  updateModalConditionalFields("", "Não");
+  document.getElementById("funcionarioModal").classList.add("hidden");
+}
+
+const cancelFuncBtn = document.getElementById("cancelFuncionario");
+if (cancelFuncBtn) cancelFuncBtn.onclick = resetFuncionarioForm;
+
+const closeFuncModalBtn = document.getElementById("closeFuncionarioModal");
+if (closeFuncModalBtn) closeFuncModalBtn.onclick = resetFuncionarioForm;
+
+function updateModalConditionalFields(cargo, aptoDirigir) {
+  const fieldCnh = document.getElementById("fieldCnh");
+  const fieldValidadeCnh = document.getElementById("fieldValidadeCnh");
+  const fieldRegistro = document.getElementById("fieldRegistro");
+  const aptoSelect = document.getElementById("inputFuncApto");
+
+  let currentApto = aptoDirigir;
+
+  // Se o cargo for Motorista, força aptidão como Sim e bloqueia a seleção
+  if (cargo === "Motorista") {
+    if (aptoSelect) {
+      aptoSelect.value = "Sim";
+      aptoSelect.disabled = true;
+    }
+    currentApto = "Sim";
+  } else {
+    if (aptoSelect) {
+      aptoSelect.disabled = false;
     }
   }
-  loadMotoristas();
+
+  // Visibilidade CNH
+  if (currentApto === "Sim") {
+    if (fieldCnh) fieldCnh.classList.remove("hidden");
+    if (fieldValidadeCnh) fieldValidadeCnh.classList.remove("hidden");
+  } else {
+    if (fieldCnh) fieldCnh.classList.add("hidden");
+    if (fieldValidadeCnh) fieldValidadeCnh.classList.add("hidden");
+  }
+
+  // Visibilidade Registro Profissional
+  if (cargo === "Médico" || cargo === "Enfermeiro" || cargo === "Socorrista") {
+    if (fieldRegistro) fieldRegistro.classList.remove("hidden");
+  } else {
+    if (fieldRegistro) fieldRegistro.classList.add("hidden");
+  }
+}
+
+const cargoSelect = document.getElementById("inputFuncCargo");
+const aptoSelect = document.getElementById("inputFuncApto");
+
+if (cargoSelect) {
+  cargoSelect.addEventListener("change", (e) => {
+    const aptoVal = aptoSelect ? aptoSelect.value : "Não";
+    updateModalConditionalFields(e.target.value, aptoVal);
+  });
+}
+
+if (aptoSelect) {
+  aptoSelect.addEventListener("change", (e) => {
+    const cargoVal = cargoSelect ? cargoSelect.value : "";
+    updateModalConditionalFields(cargoVal, e.target.value);
+  });
+}
+
+const saveFuncBtn = document.getElementById("saveFuncionario");
+if (saveFuncBtn) {
+  saveFuncBtn.onclick = async () => {
+    const cargo = inputValue("inputFuncCargo");
+    const apto = cargo === "Motorista" ? "Sim" : inputValue("inputFuncApto");
+    const data = {
+      nome: inputValue("inputFuncNome"),
+      cargo: cargo,
+      cpf: inputValue("inputFuncCpf"),
+      idade: inputValue("inputFuncIdade"),
+      telefone: inputValue("inputFuncTelefone"),
+      email: inputValue("inputFuncEmail"),
+      apto_dirigir: apto,
+      cnh: apto === "Sim" ? inputValue("inputFuncCnh") : "",
+      validade_cnh: apto === "Sim" ? inputValue("inputFuncValidadeCnh") : "",
+      registro: cargo !== "Motorista" ? inputValue("inputFuncRegistro") : "",
+      status: "Disponível"
+    };
+
+    if (cargo === "Motorista") {
+      const method = funcionarioEditandoId && typeof funcionarioEditandoId === 'number' ? "PUT" : "POST";
+      const url = funcionarioEditandoId && typeof funcionarioEditandoId === 'number' ? `${API}/motoristas/${funcionarioEditandoId}` : `${API}/motoristas`;
+      
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nome: data.nome,
+            cpf: data.cpf,
+            telefone: data.telefone,
+            idade: data.idade,
+            cnh: data.cnh,
+            validade_cnh: data.validade_cnh,
+            email: data.email
+          })
+        });
+        if (!res.ok) throw new Error("API Error");
+        usingMockFuncionarios = false;
+      } catch (err) {
+        saveFuncionarioMock(data);
+      }
+    } else {
+      saveFuncionarioMock(data);
+    }
+
+    resetFuncionarioForm();
+    await loadFuncionarios(currentFuncionarioFilter);
+  };
+}
+
+function saveFuncionarioMock(data) {
+  if (funcionarioEditandoId) {
+    const idx = funcionariosCache.findIndex(f => f.id == funcionarioEditandoId);
+    if (idx > -1) {
+      funcionariosCache[idx] = { ...funcionariosCache[idx], ...data };
+    }
+  } else {
+    const numericIds = funcionariosCache.map(f => Number(f.id)).filter(n => !isNaN(n));
+    const newId = numericIds.length > 0 ? Math.max(...numericIds) + 1 : 1;
+    funcionariosCache.push({ id: newId, ...data });
+    selectedFuncionarioId = newId;
+  }
+}
+
+function editFuncionario(id) {
+  const f = funcionariosCache.find(func => func.id == id);
+  if (!f) return;
+
+  document.getElementById("inputFuncNome").value = f.nome || "";
+  document.getElementById("inputFuncCargo").value = f.cargo || "";
+  document.getElementById("inputFuncCpf").value = f.cpf || "";
+  document.getElementById("inputFuncIdade").value = f.idade || "";
+  document.getElementById("inputFuncTelefone").value = f.telefone || "";
+  document.getElementById("inputFuncEmail").value = f.email || "";
+
+  const aptoSelect = document.getElementById("inputFuncApto");
+  const aptoVal = f.apto_dirigir || "Não";
+  if (aptoSelect) aptoSelect.value = aptoVal;
+
+  updateModalConditionalFields(f.cargo, aptoVal);
+
+  if (aptoVal === "Sim") {
+    document.getElementById("inputFuncCnh").value = f.cnh || "";
+    document.getElementById("inputFuncValidadeCnh").value = f.validade_cnh || "";
+  } else {
+    document.getElementById("inputFuncCnh").value = "";
+    document.getElementById("inputFuncValidadeCnh").value = "";
+  }
+
+  if (f.cargo !== "Motorista") {
+    document.getElementById("inputFuncRegistro").value = f.registro || "";
+  } else {
+    document.getElementById("inputFuncRegistro").value = "";
+  }
+
+  funcionarioEditandoId = id;
+  document.getElementById("saveFuncionario").innerHTML = '<i class="ph ph-pencil-simple"></i> Atualizar Funcionário';
+  document.getElementById("funcionarioModal").classList.remove("hidden");
+}
+
+async function deleteFuncionario(id) {
+  const f = funcionariosCache.find(func => func.id == id);
+  if (!f) return;
+
+  if (f.cargo === "Motorista" && typeof id === 'number') {
+    try {
+      const res = await fetch(`${API}/motoristas/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("API Error");
+      usingMockFuncionarios = false;
+    } catch (e) {
+      funcionariosCache = funcionariosCache.filter(func => func.id != id);
+      if (selectedFuncionarioId == id) selectedFuncionarioId = null;
+    }
+  } else {
+    funcionariosCache = funcionariosCache.filter(func => func.id != id);
+    if (selectedFuncionarioId == id) selectedFuncionarioId = null;
+  }
+  
+  await loadFuncionarios(currentFuncionarioFilter);
 }
 
 async function loadManutencoes() {
@@ -689,13 +923,6 @@ async function deleteAbastecimento(id) {
 }
 
 document.getElementById("addAbastecimentoBtn").onclick = () => {
-  document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("addAbastecimentoBtn").onclick = () => {
-    abastecimentoEditandoId = null;
-    resetAbastecimentoForm();
-    document.getElementById("abastecimentoForm").classList.remove("hidden");
-  };
-});
   abastecimentoEditandoId = null;
   resetAbastecimentoForm();
   document.getElementById("abastecimentoForm").classList.remove("hidden");
@@ -752,155 +979,13 @@ function inputValue(id) {
 function loadPageData(pageId) {
   if (pageId === "dashboardPage") loadDashboard();
   if (pageId === "veiculosPage") loadVeiculos();
-  if (pageId === "motoristasPage") loadMotoristas();
-  if (pageId === "equipePage") loadEquipe();
+  if (pageId === "funcionariosPage") loadFuncionarios(currentFuncionarioFilter);
   if (pageId === "ocorrenciasPage") loadOcorrencias();
   if (pageId === "manutencoesPage") loadManutencoes();
   if (pageId === "abastecimentosPage") loadAbastecimentos();
 }
 
-// ================= EQUIPE MÉDICA LOGIC =================
-let selectedEquipeId = null;
 
-function loadEquipe() {
-  const list = document.getElementById("equipeList");
-  if (!list) return;
-  list.innerHTML = "";
-
-  const badge = document.getElementById("badgeTotalEquipe");
-  if (badge) badge.textContent = equipeCache.length;
-
-  equipeCache.forEach(e => {
-    const card = document.createElement("div");
-    card.className = "tracking-card";
-    card.dataset.id = e.id;
-    if (e.id === selectedEquipeId) card.classList.add("selected");
-
-    card.innerHTML = `
-      <div class="tc-header">
-        <h3>${e.nome}</h3>
-        <span class="status-badge badge-available">
-          <i class="ph ph-check-circle"></i> ${e.status || 'Disponível'}
-        </span>
-      </div>
-      <div style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">
-        ${e.cargo} | ${e.registro}
-      </div>
-    `;
-
-    card.onclick = () => selectMembroEquipe(e.id);
-    list.appendChild(card);
-  });
-
-  closeDetails('equipe');
-}
-
-function selectMembroEquipe(id) {
-  selectedEquipeId = id;
-  const e = equipeCache.find(eq => eq.id === id);
-  if (!e) return;
-
-  // Update selected class on cards
-  const cards = document.querySelectorAll("#equipeList .tracking-card");
-  cards.forEach(card => {
-    if (Number(card.dataset.id) === Number(id)) {
-      card.classList.add("selected");
-    } else {
-      card.classList.remove("selected");
-    }
-  });
-
-  const el = docId => document.getElementById(docId);
-  if(el("detailEquipeNome")) el("detailEquipeNome").textContent = e.nome || 'Sem Nome';
-  if(el("detailEquipeStatus")) {
-    el("detailEquipeStatus").className = `status-badge badge-available`;
-    el("detailEquipeStatus").innerHTML = `<i class="ph ph-check-circle"></i> ${e.status || 'Disponível'}`;
-  }
-  
-  if(el("detailEquipeCargo")) el("detailEquipeCargo").textContent = e.cargo || '-';
-  if(el("detailEquipeRegistro")) el("detailEquipeRegistro").textContent = e.registro || '-';
-  if(el("detailEquipeTelefone")) el("detailEquipeTelefone").textContent = e.telefone || '-';
-  if(el("detailEquipeEmail")) el("detailEquipeEmail").textContent = e.email || '-';
-
-  const btnEdit = el("btnEditMembro");
-  if(btnEdit) btnEdit.onclick = () => editMembroEquipe(e.id);
-
-  const btnDel = el("btnDeleteMembro");
-  if(btnDel) btnDel.onclick = () => {
-    if(confirm(`Tem certeza que deseja remover o membro "${e.nome}"?`)) {
-      deleteMembroEquipe(e.id);
-    }
-  };
-
-  showDetails('equipe');
-}
-
-document.getElementById("addMembroBtn").onclick = () => {
-  equipeEditandoId = null;
-  resetEquipeForm();
-  document.getElementById("saveMembro").innerHTML = '<i class="ph ph-floppy-disk"></i> Salvar Profissional';
-  document.getElementById("equipeModal").classList.remove("hidden");
-};
-
-function resetEquipeForm() {
-  ["inputMembroNome", "inputMembroCargo", "inputMembroRegistro", "inputMembroTelefone", "inputMembroEmail"].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) {
-      el.value = (el.tagName === "SELECT") ? el.options[0].value : "";
-    }
-  });
-  document.getElementById("equipeModal").classList.add("hidden");
-}
-
-document.getElementById("cancelMembro").onclick = resetEquipeForm;
-const closeEquipeModalBtn = document.getElementById("closeEquipeModal");
-if (closeEquipeModalBtn) closeEquipeModalBtn.onclick = resetEquipeForm;
-
-document.getElementById("saveMembro").onclick = () => {
-  const data = {
-    nome: inputValue("inputMembroNome"),
-    cargo: inputValue("inputMembroCargo"),
-    registro: inputValue("inputMembroRegistro"),
-    telefone: inputValue("inputMembroTelefone"),
-    email: inputValue("inputMembroEmail"),
-    status: "Disponível"
-  };
-
-  if (equipeEditandoId) {
-    const idx = equipeCache.findIndex(e => e.id == equipeEditandoId);
-    if (idx > -1) {
-      equipeCache[idx] = { ...equipeCache[idx], ...data, status: equipeCache[idx].status };
-    }
-  } else {
-    const newId = equipeCache.length > 0 ? Math.max(...equipeCache.map(e => e.id)) + 1 : 1;
-    equipeCache.push({ id: newId, ...data });
-    selectedEquipeId = newId;
-  }
-
-  resetEquipeForm();
-  loadEquipe();
-};
-
-function editMembroEquipe(id) {
-  const e = equipeCache.find(eq => eq.id == id);
-  if(!e) return;
-
-  document.getElementById("inputMembroNome").value = e.nome || "";
-  document.getElementById("inputMembroCargo").value = e.cargo || "Médico";
-  document.getElementById("inputMembroRegistro").value = e.registro || "";
-  document.getElementById("inputMembroTelefone").value = e.telefone || "";
-  document.getElementById("inputMembroEmail").value = e.email || "";
-
-  equipeEditandoId = id;
-  document.getElementById("saveMembro").innerHTML = '<i class="ph ph-pencil-simple"></i> Atualizar Profissional';
-  document.getElementById("equipeModal").classList.remove("hidden");
-}
-
-function deleteMembroEquipe(id) {
-  equipeCache = equipeCache.filter(e => e.id != id);
-  if (selectedEquipeId == id) selectedEquipeId = null;
-  loadEquipe();
-}
 
 // ================= OCORRÊNCIAS LOGIC =================
 
@@ -1074,7 +1159,7 @@ function deleteOcorrencia(id) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await loadMotoristasCache();
+  await loadFuncionariosCache();
   await loadVeiculosCache();
   initAutocompletes();
   loadDashboard();
@@ -1088,11 +1173,3 @@ function selectOption(valor) {
   document.getElementById("options").classList.remove("active");
 }
 console.log("Script carregou");
-
-const btn = document.getElementById("addAbastecimentoBtn");
-console.log("Botão:", btn);
-
-btn.onclick = () => {
-  console.log("CLICOU!");
-  document.getElementById("abastecimentoForm").classList.remove("hidden");
-};

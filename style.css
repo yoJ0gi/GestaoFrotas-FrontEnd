@@ -150,6 +150,70 @@ html:not(.dark) .sidebar-nav-main a.active {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+/* ================= SIDEBAR SUBMENU ================= */
+.sidebar-submenu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 20px;
+  border-left: 1.5px solid rgba(255, 255, 255, 0.08);
+  padding-left: 8px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s, margin 0.3s;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar-submenu.open {
+  max-height: 250px;
+  opacity: 1;
+  pointer-events: all;
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+
+.sidebar-submenu a {
+  padding: 8px 12px !important;
+  font-size: 13.5px !important;
+  border-radius: 8px !important;
+  color: #8892a5 !important;
+  gap: 10px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.sidebar-submenu a i {
+  font-size: 16px !important;
+}
+
+html:not(.dark) .sidebar-submenu {
+  border-left-color: rgba(0, 0, 0, 0.08);
+}
+
+.sidebar-submenu a:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #ffffff !important;
+  transform: translateX(2px) !important;
+}
+
+html:not(.dark) .sidebar-submenu a:hover {
+  background: rgba(0, 0, 0, 0.04) !important;
+  color: var(--primary) !important;
+}
+
+.sidebar-submenu a.active {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #60a5fa !important;
+  font-weight: 600 !important;
+}
+
+html:not(.dark) .sidebar-submenu a.active {
+  background: rgba(0, 0, 0, 0.05) !important;
+  color: var(--primary) !important;
+  font-weight: 600 !important;
+}
+
 /* ================= SIDEBAR BOTTOM ================= */
 .sidebar-bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -440,8 +504,7 @@ html:not(.dark) .sidebar-bottom-item:hover {
 }
 
 #addVeiculoBtn,
-#addMotoristaBtn,
-#addMembroBtn,
+#addFuncionarioBtn,
 #addOcorrenciaBtn {
   display: inline-flex;
   align-items: center;
@@ -458,16 +521,14 @@ html:not(.dark) .sidebar-bottom-item:hover {
 }
 
 #addVeiculoBtn:hover,
-#addMotoristaBtn:hover,
-#addMembroBtn:hover,
+#addFuncionarioBtn:hover,
 #addOcorrenciaBtn:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 25px rgba(59, 130, 246, 0.35);
 }
 
 #addVeiculoBtn i,
-#addMotoristaBtn i,
-#addMembroBtn i,
+#addFuncionarioBtn i,
 #addOcorrenciaBtn i {
   font-size: 22px;
 }
@@ -1193,8 +1254,7 @@ html:not(.dark) .modal-header {
 }
 
 #saveVeiculo,
-#saveMotorista,
-#saveMembro,
+#saveFuncionario,
 #saveOcorrencia {
   background: linear-gradient(135deg, #10b981, #059669);
   color: #fff;
@@ -1210,16 +1270,14 @@ html:not(.dark) .modal-header {
 }
 
 #saveVeiculo:hover,
-#saveMotorista:hover,
-#saveMembro:hover,
+#saveFuncionario:hover,
 #saveOcorrencia:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
 }
 
 #cancelVeiculo,
-#cancelMotorista,
-#cancelMembro,
+#cancelFuncionario,
 #cancelOcorrencia {
   background: var(--bg-main);
   color: var(--text-light);
@@ -1230,8 +1288,7 @@ html:not(.dark) .modal-header {
 }
 
 #cancelVeiculo:hover,
-#cancelMotorista:hover,
-#cancelMembro:hover,
+#cancelFuncionario:hover,
 #cancelOcorrencia:hover {
   background: var(--bg-card);
   color: var(--text);
@@ -1342,7 +1399,11 @@ button:hover {
 
 /* ================= UTIL ================= */
 .hidden {
-  display: none;
+  display: none !important;
+}
+
+.conditional-field.hidden {
+  display: none !important;
 }
 
 /* ================= TEXTAREA ================= */

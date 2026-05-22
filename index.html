@@ -24,9 +24,14 @@
       <nav class="sidebar-nav-main">
         <a href="#" class="active" data-target="dashboardPage"><i class="ph ph-squares-four"></i> Dashboard</a>
         <a href="#" data-target="ocorrenciasPage"><i class="ph ph-warning-circle"></i> Ocorrências</a>
-        <a href="#" data-target="equipePage"><i class="ph ph-stethoscope"></i> Equipe Médica</a>
+        <a href="#" data-target="funcionariosPage" class="has-submenu"><i class="ph ph-users-three"></i> Funcionários</a>
+        <div class="sidebar-submenu" id="funcionariosSubmenu">
+          <a href="#" data-filter="Motorista" data-target="funcionariosPage"><i class="ph ph-steering-wheel"></i> Motoristas</a>
+          <a href="#" data-filter="Médico" data-target="funcionariosPage"><i class="ph ph-stethoscope"></i> Médicos</a>
+          <a href="#" data-filter="Enfermeiro" data-target="funcionariosPage"><i class="ph ph-first-aid"></i> Enfermeiros</a>
+          <a href="#" data-filter="Socorrista" data-target="funcionariosPage"><i class="ph ph-siren"></i> Socorristas</a>
+        </div>
         <a href="#" data-target="veiculosPage"><i class="ph ph-ambulance"></i> Viaturas</a>
-        <a href="#" data-target="motoristasPage"><i class="ph ph-steering-wheel"></i> Motoristas</a>
       </nav>
       <div class="sidebar-bottom">
         <div class="sidebar-bottom-item theme-toggle-item">
@@ -277,41 +282,33 @@
 
       </section>
 
-      <section id="motoristasPage" class="page">
+      <!-- SEÇÃO: FUNCIONÁRIOS (unificada) -->
+      <section id="funcionariosPage" class="page">
         <div class="page-header">
           <div>
-            <h1>Motoristas</h1>
-            <p class="subtitle">Gestão da equipe de condutores</p>
+            <h1 id="funcionariosPageTitle">Funcionários</h1>
+            <p class="subtitle" id="funcionariosPageSubtitle">Todos os profissionais vinculados à frota hospitalar</p>
           </div>
-          <button id="addMotoristaBtn" type="button"><i class="ph ph-plus-circle"></i> Adicionar Motorista</button>
+          <button id="addFuncionarioBtn" type="button"><i class="ph ph-plus-circle"></i> Adicionar Funcionário</button>
         </div>
 
         <div class="page-body">
-        <!-- Lista de Motoristas -->
-        <div class="tracking-sidebar" id="motoristasSidebar">
-          <div class="pill-filters">
-            <p>Filtrar Status:</p>
-            <div class="pill-group">
-              <button class="pill active">Todos <span class="badge" id="badgeTotalMotoristas">0</span></button>
-              <button class="pill">Ativo</button>
-              <button class="pill">Férias</button>
-            </div>
-          </div>
-
-          <div id="motoristasList" class="tracking-grid"></div>
+        <!-- Lista de Funcionários -->
+        <div class="tracking-sidebar" id="funcionariosSidebar">
+          <div id="funcionariosList" class="tracking-grid"></div>
         </div>
 
         <!-- Detalhes (oculto por padrão) -->
-        <div class="vehicle-details-panel hidden" id="motoristasDetail">
+        <div class="vehicle-details-panel hidden" id="funcionariosDetail">
           <div class="details-top-bar">
-            <button class="close-details-btn" onclick="closeDetails('motoristas')">
+            <button class="close-details-btn" onclick="closeDetails('funcionarios')">
               <i class="ph ph-arrow-left"></i> Voltar para lista
             </button>
           </div>
           <div class="details-header">
             <div class="header-title">
-              <h2 id="detailMotoristaNome">Selecione um Motorista</h2>
-              <span id="detailMotoristaStatus" class="status-badge badge-available"><i class="ph ph-check-circle"></i> Ativo</span>
+              <h2 id="detailFuncNome">Selecione um Funcionário</h2>
+              <span id="detailFuncStatus" class="status-badge badge-available"><i class="ph ph-check-circle"></i> Disponível</span>
             </div>
             <div class="header-actions">
               <button class="btn-outline-primary"><i class="ph ph-phone"></i> Ligar</button>
@@ -327,200 +324,132 @@
 
           <div class="details-content">
              <div class="large-vehicle-image" style="display: flex; justify-content: center; align-items: center; background: var(--bg-secondary); border-radius: 12px; padding: 2rem;">
-               <i class="ph ph-user-circle" style="font-size: 120px; color: var(--text-muted);"></i>
+               <i class="ph ph-user-circle" id="detailFuncIcon" style="font-size: 120px; color: var(--text-muted);"></i>
              </div>
 
-             <div class="vehicle-info-grid">
-               <div class="info-box">
-                 <p>Idade</p>
-                 <h4 id="detailMotoristaIdade">-</h4>
-               </div>
-               <div class="info-box">
-                 <p>CPF</p>
-                 <h4 id="detailMotoristaCpf">-</h4>
-               </div>
-               <div class="info-box">
-                 <p>CNH</p>
-                 <h4 id="detailMotoristaCnh">-</h4>
-               </div>
-               <div class="info-box">
-                 <p>Validade CNH</p>
-                 <h4 id="detailMotoristaValidadeCnh">-</h4>
-               </div>
-               <div class="info-box">
-                 <p>Telefone</p>
-                 <h4 id="detailMotoristaTelefone">-</h4>
-               </div>
-               <div class="info-box">
-                 <p>Email</p>
-                 <h4 id="detailMotoristaEmail">-</h4>
-               </div>
-             </div>
-
-             <div class="admin-actions">
-               <button class="btn-outline" id="btnEditMotorista"><i class="ph ph-pencil-simple"></i> Editar Cadastro</button>
-               <button class="btn-outline-danger" id="btnDeleteMotorista"><i class="ph ph-trash"></i> Remover Motorista</button>
-             </div>
-          </div>
-        </div>
-      </div>
-
-        <!-- MODAL CADASTRO DE MOTORISTAS -->
-        <div id="motoristaModal" class="modal-overlay hidden">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h3><i class="ph ph-steering-wheel"></i> Cadastrar Novo Motorista</h3>
-              <button class="close-modal-btn" id="closeMotoristaModal"><i class="ph ph-x"></i></button>
-            </div>
-
-            <div class="modal-body form-grid">
-              <div class="form-group full-width">
-                <label>Nome Completo</label>
-                <input id="inputNomeMotorista" placeholder="EX: João da Silva" />
-              </div>
-
-              <div class="form-group">
-                <label>CPF</label>
-                <input id="inputCPF" placeholder="EX: 000.000.000-00" />
-              </div>
-
-              <div class="form-group">
-                <label>Idade</label>
-                <input id="inputIdadeMotorista" type="number" placeholder="EX: 35" />
-              </div>
-
-              <div class="form-group">
-                <label>CNH</label>
-                <input id="inputCNH" placeholder="Número da CNH" />
-              </div>
-
-              <div class="form-group">
-                <label>Validade CNH</label>
-                <input id="inputValidadeCNH" type="date" placeholder="Selecione a data" />
-              </div>
-
-              <div class="form-group">
-                <label>Telefone</label>
-                <input id="inputTelefone" placeholder="(00) 00000-0000" />
-              </div>
-
-              <div class="form-group full-width">
-                <label>Email</label>
-                <input id="inputEmail" type="email" placeholder="email@exemplo.com" />
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button id="cancelMotorista" class="btn-outline-danger">Cancelar</button>
-              <button id="saveMotorista" class="btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Motorista</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- NOVA SEÇÃO: EQUIPE MÉDICA -->
-      <section id="equipePage" class="page">
-        <div class="page-header">
-          <div>
-            <h1>Equipe Médica</h1>
-            <p class="subtitle">Gestão de médicos, enfermeiros e socorristas</p>
-          </div>
-          <button id="addMembroBtn" type="button"><i class="ph ph-plus-circle"></i> Adicionar Membro</button>
-        </div>
-
-        <div class="page-body">
-        <!-- Lista de Equipe -->
-        <div class="tracking-sidebar" id="equipeSidebar">
-          <div class="pill-filters">
-            <p>Filtrar Status:</p>
-            <div class="pill-group">
-              <button class="pill active">Todos <span class="badge" id="badgeTotalEquipe">0</span></button>
-              <button class="pill">Disponível</button>
-              <button class="pill">Em Rota</button>
-            </div>
-          </div>
-          <div id="equipeList" class="tracking-grid"></div>
-        </div>
-
-        <!-- Detalhes (oculto por padrão) -->
-        <div class="vehicle-details-panel hidden" id="equipeDetail">
-          <div class="details-top-bar">
-            <button class="close-details-btn" onclick="closeDetails('equipe')">
-              <i class="ph ph-arrow-left"></i> Voltar para lista
-            </button>
-          </div>
-          <div class="details-header">
-            <div class="header-title">
-              <h2 id="detailEquipeNome">Selecione um Profissional</h2>
-              <span id="detailEquipeStatus" class="status-badge badge-available"><i class="ph ph-check-circle"></i> Disponível</span>
-            </div>
-          </div>
-          <div class="details-content">
-             <div class="large-vehicle-image" style="display: flex; justify-content: center; align-items: center; background: var(--bg-secondary); border-radius: 12px; padding: 2rem;">
-               <i class="ph ph-stethoscope" style="font-size: 100px; color: var(--primary);"></i>
-             </div>
              <div class="vehicle-info-grid">
                <div class="info-box">
                  <p>Cargo</p>
-                 <h4 id="detailEquipeCargo">-</h4>
+                 <h4 id="detailFuncCargo">-</h4>
                </div>
                <div class="info-box">
-                 <p>CRM / Coren</p>
-                 <h4 id="detailEquipeRegistro">-</h4>
+                 <p>Idade</p>
+                 <h4 id="detailFuncIdade">-</h4>
+               </div>
+               <div class="info-box">
+                 <p>CPF</p>
+                 <h4 id="detailFuncCpf">-</h4>
                </div>
                <div class="info-box">
                  <p>Telefone</p>
-                 <h4 id="detailEquipeTelefone">-</h4>
+                 <h4 id="detailFuncTelefone">-</h4>
                </div>
                <div class="info-box">
                  <p>Email</p>
-                 <h4 id="detailEquipeEmail">-</h4>
+                 <h4 id="detailFuncEmail">-</h4>
+               </div>
+               <div class="info-box" id="detailFuncAptoBox">
+                 <p>Apto a Dirigir?</p>
+                 <h4 id="detailFuncApto">-</h4>
+               </div>
+               <!-- Campos condicionais: Motorista -->
+               <div class="info-box" id="detailFuncCnhBox">
+                 <p>CNH</p>
+                 <h4 id="detailFuncCnh">-</h4>
+               </div>
+               <div class="info-box" id="detailFuncValidadeCnhBox">
+                 <p>Validade CNH</p>
+                 <h4 id="detailFuncValidadeCnh">-</h4>
+               </div>
+               <!-- Campos condicionais: Médico/Enfermeiro/Socorrista -->
+               <div class="info-box" id="detailFuncRegistroBox">
+                 <p>Registro Profissional</p>
+                 <h4 id="detailFuncRegistro">-</h4>
                </div>
              </div>
+
              <div class="admin-actions">
-               <button class="btn-outline" id="btnEditMembro"><i class="ph ph-pencil-simple"></i> Editar Cadastro</button>
-               <button class="btn-outline-danger" id="btnDeleteMembro"><i class="ph ph-trash"></i> Remover</button>
+               <button class="btn-outline" id="btnEditFuncionario"><i class="ph ph-pencil-simple"></i> Editar Cadastro</button>
+               <button class="btn-outline-danger" id="btnDeleteFuncionario"><i class="ph ph-trash"></i> Remover Funcionário</button>
              </div>
           </div>
         </div>
       </div>
 
-        <!-- MODAL CADASTRO EQUIPE -->
-        <div id="equipeModal" class="modal-overlay hidden">
+        <!-- MODAL CADASTRO DE FUNCIONÁRIOS -->
+        <div id="funcionarioModal" class="modal-overlay hidden">
           <div class="modal-content">
             <div class="modal-header">
-              <h3><i class="ph ph-stethoscope"></i> Cadastrar Profissional</h3>
-              <button class="close-modal-btn" id="closeEquipeModal"><i class="ph ph-x"></i></button>
+              <h3><i class="ph ph-users-three"></i> Cadastrar Funcionário</h3>
+              <button class="close-modal-btn" id="closeFuncionarioModal"><i class="ph ph-x"></i></button>
             </div>
+
             <div class="modal-body form-grid">
               <div class="form-group full-width">
                 <label>Nome Completo</label>
-                <input id="inputMembroNome" placeholder="EX: Dr. Marcos Paulo" />
+                <input id="inputFuncNome" placeholder="EX: João da Silva" />
               </div>
+
               <div class="form-group">
-                <label>Cargo</label>
-                <select id="inputMembroCargo">
+                <label>Cargo / Função</label>
+                <select id="inputFuncCargo">
+                  <option value="">Selecione...</option>
+                  <option value="Motorista">Motorista</option>
                   <option value="Médico">Médico</option>
                   <option value="Enfermeiro">Enfermeiro</option>
                   <option value="Socorrista">Socorrista</option>
                 </select>
               </div>
+
               <div class="form-group">
-                <label>CRM / Coren</label>
-                <input id="inputMembroRegistro" placeholder="Número do registro" />
+                <label>CPF</label>
+                <input id="inputFuncCpf" placeholder="EX: 000.000.000-00" />
               </div>
+
+              <div class="form-group">
+                <label>Idade</label>
+                <input id="inputFuncIdade" type="number" placeholder="EX: 35" />
+              </div>
+
               <div class="form-group">
                 <label>Telefone</label>
-                <input id="inputMembroTelefone" placeholder="(00) 00000-0000" />
+                <input id="inputFuncTelefone" placeholder="(00) 00000-0000" />
               </div>
-              <div class="form-group">
+
+              <div class="form-group full-width">
                 <label>Email</label>
-                <input id="inputMembroEmail" type="email" placeholder="email@exemplo.com" />
+                <input id="inputFuncEmail" type="email" placeholder="email@exemplo.com" />
+              </div>
+
+              <div class="form-group" id="groupAptoDirigir">
+                <label>Apto a Dirigir?</label>
+                <select id="inputFuncApto">
+                  <option value="Não">Não</option>
+                  <option value="Sim">Sim</option>
+                </select>
+              </div>
+
+              <!-- Campos condicionais: Motorista -->
+              <div class="form-group conditional-field" id="fieldCnh">
+                <label>CNH</label>
+                <input id="inputFuncCnh" placeholder="Número da CNH" />
+              </div>
+
+              <div class="form-group conditional-field" id="fieldValidadeCnh">
+                <label>Validade CNH</label>
+                <input id="inputFuncValidadeCnh" type="date" />
+              </div>
+
+              <!-- Campos condicionais: Médico/Enfermeiro/Socorrista -->
+              <div class="form-group conditional-field" id="fieldRegistro">
+                <label>Registro Profissional (CRM/Coren/etc)</label>
+                <input id="inputFuncRegistro" placeholder="Número do registro" />
               </div>
             </div>
+
             <div class="modal-footer">
-              <button id="cancelMembro" class="btn-outline-danger">Cancelar</button>
-              <button id="saveMembro" class="btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Profissional</button>
+              <button id="cancelFuncionario" class="btn-outline-danger">Cancelar</button>
+              <button id="saveFuncionario" class="btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Funcionário</button>
             </div>
           </div>
         </div>
