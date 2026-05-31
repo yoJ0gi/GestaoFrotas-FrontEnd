@@ -37,6 +37,13 @@ form.addEventListener("submit", async (e) => {
   erro.textContent = "";
 
   try {
+    // Fallback/Mock para login de demonstração local
+    if ((usuario === "admin" || usuario === "admin@email.com") && senha === "admin123") {
+      localStorage.setItem("token", "MOCKED_JWT_TOKEN_MEDFLEET_2026_SESSION");
+      window.location.href = "index.html";
+      return;
+    }
+
     const response = await fetch("http://127.0.0.1:8000/api/login/", {
       method: "POST",
       headers: {
@@ -61,7 +68,7 @@ form.addEventListener("submit", async (e) => {
 
   } catch (err) {
     console.error(err);
-    erro.textContent = "Não foi possível conectar ao servidor.";
+    erro.textContent = "Não foi possível conectar ao servidor backend.";
   } finally {
     btnLogin.textContent = textoOriginal;
     btnLogin.disabled = false;
