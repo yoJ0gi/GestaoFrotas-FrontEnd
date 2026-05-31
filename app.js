@@ -1,4 +1,4 @@
-const API = "http://localhost:3000/api";
+const API = "http://127.0.0.1:8000/api";
 
 async function carregar() {
   const res = await fetch(API + "/veiculos");

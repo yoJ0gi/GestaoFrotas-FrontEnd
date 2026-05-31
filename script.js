@@ -1,9 +1,26 @@
 // Proteção de rota no Front-end: redireciona para login se não houver token
-if (!localStorage.getItem("medfleet_token")) {
+const token = localStorage.getItem("token");
+
+if (!token) {
   window.location.href = "login.html";
 }
 
-const API = "http://localhost:3000/api";
+// ================= AUTH FETCH INTERCEPTOR =================
+// Injeta automaticamente o header Authorization: Token <token> em todas
+// as requisições para a API, sem precisar alterar nenhum fetch individual.
+const _originalFetch = window.fetch;
+window.fetch = function(url, options = {}) {
+  if (typeof url === 'string' && url.startsWith(API)) {
+    const token = localStorage.getItem("token");
+    if (token && token !== "MOCKED_JWT_TOKEN_MEDFLEET_2026_SESSION") {
+      options.headers = {
+        ...(options.headers || {}),
+        "Authorization": `Token ${token}`
+      };
+    }
+  }
+  return _originalFetch.call(this, url, options);
+};
 
 let funcionarioEditandoId = null;
 let veiculoEditandoId = null;
@@ -1470,12 +1487,6 @@ function deleteEquipe(id) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // Verificação extra de segurança no front
-  if (!localStorage.getItem("medfleet_token")) {
-    window.location.href = "login.html";
-    return;
-  }
-
   await loadFuncionariosCache();
   await loadVeiculosCache();
   initAutocompletes();
@@ -1487,7 +1498,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", (e) => {
       e.preventDefault();
-      localStorage.removeItem("medfleet_token");
+      localStorage.removeItem("token");
       window.location.href = "login.html";
     });
   }

@@ -1,5 +1,5 @@
 // Redireciona se o usuário já estiver logado
-if (localStorage.getItem("medfleet_token")) {
+if (localStorage.getItem("token")) {
   window.location.href = "index.html";
 }
 
@@ -18,27 +18,52 @@ toggleSenha.addEventListener("click", () => {
   }
 });
 
-form.addEventListener("submit", (e) => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const email = document.getElementById("email").value.trim();
+  const usuario = document.getElementById("usuario").value.trim();
   const senha = senhaInput.value;
 
-  if (email === "" || senha === "") {
+  if (!usuario || !senha) {
     erro.textContent = "Preencha todos os campos!";
     return;
   }
 
-  // Credenciais de administrador fornecidas pelo template original
-  if (email === "admin@email.com" && senha === "admin123") {
-    erro.textContent = "";
-    
-    // Gerar e armazenar token fake no localStorage
-    localStorage.setItem("medfleet_token", "MOCKED_JWT_TOKEN_MEDFLEET_2026_SESSION");
-    
-    // Redirecionar para o painel principal
+  const btnLogin = form.querySelector(".btn-login");
+  const textoOriginal = btnLogin.textContent;
+
+  btnLogin.textContent = "Entrando...";
+  btnLogin.disabled = true;
+  erro.textContent = "";
+
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/login/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username: usuario,
+        password: senha
+      })
+    });
+
+    if (!response.ok) {
+      erro.textContent = "Usuário ou senha inválidos.";
+      return;
+    }
+
+    const data = await response.json();
+
+    localStorage.setItem("token", data.token);
+
     window.location.href = "index.html";
-  } else {
-    erro.textContent = "E-mail ou senha incorretos!";
+
+  } catch (err) {
+    console.error(err);
+    erro.textContent = "Não foi possível conectar ao servidor.";
+  } finally {
+    btnLogin.textContent = textoOriginal;
+    btnLogin.disabled = false;
   }
 });
