@@ -43,22 +43,28 @@
         <a href="#" data-target="equipeMedicaPage"><i class="ph ph-users-four"></i> Equipe Médica</a>
       </nav>
       <div class="sidebar-bottom">
-        <div class="sidebar-bottom-item theme-toggle-item">
-          <i class="ph ph-moon"></i>
-          <span>Dark Mode</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="themeToggleSwitch" checked>
-            <span class="toggle-slider"></span>
-          </label>
+        <button class="sidebar-bottom-toggle" id="sidebarBottomToggleBtn" type="button">
+          <span id="sidebarBottomToggleLabel">Mais Opções</span>
+          <i class="ph ph-caret-down" id="sidebarBottomToggleIcon"></i>
+        </button>
+        <div class="sidebar-bottom-content" id="sidebarBottomContent">
+          <div class="sidebar-bottom-item theme-toggle-item">
+            <i class="ph ph-moon"></i>
+            <span>Dark Mode</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="themeToggleSwitch" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <a href="#" class="sidebar-bottom-item" id="settingsLink">
+            <i class="ph ph-gear"></i>
+            <span>Configurações</span>
+          </a>
+          <a href="#" class="sidebar-bottom-item" id="logoutLink">
+            <i class="ph ph-sign-out"></i>
+            <span>Logout</span>
+          </a>
         </div>
-        <a href="#" class="sidebar-bottom-item" id="settingsLink">
-          <i class="ph ph-gear"></i>
-          <span>Configurações</span>
-        </a>
-        <a href="#" class="sidebar-bottom-item" id="logoutLink">
-          <i class="ph ph-sign-out"></i>
-          <span>Logout</span>
-        </a>
       </div>
     </aside>
 
@@ -71,17 +77,55 @@
           <input type="text" placeholder="Buscar..." id="globalSearch">
         </div>
         <div class="topbar-right">
-          <button class="topbar-icon-btn" id="notificationBtn" title="Notificações">
-            <i class="ph ph-bell"></i>
-            <span class="notification-dot"></span>
-          </button>
-          <div class="topbar-user">
-            <div class="topbar-avatar">
-              <i class="ph ph-user"></i>
+          <div class="notification-wrapper" style="position: relative;">
+            <button class="topbar-icon-btn" id="notificationBtn" title="Notificações">
+              <i class="ph ph-bell"></i>
+              <span class="notification-dot"></span>
+            </button>
+            <div class="notification-dropdown hidden" id="notificationDropdown">
+              <div class="dropdown-header">
+                <h3>Central de Alertas</h3>
+                <button id="btnMarkAllRead" class="btn-text">Marcar todas como lidas</button>
+              </div>
+              <ul class="dropdown-list" id="dropdownNotificationList">
+                <!-- Injected dynamically -->
+              </ul>
             </div>
-            <div class="topbar-user-info">
-              <span class="topbar-user-name">Admin</span>
-              <span class="topbar-user-role">Administrador</span>
+          </div>
+          <div class="user-wrapper" style="position: relative;">
+            <div class="topbar-user" id="userProfileBtn">
+              <div class="topbar-avatar">
+                <i class="ph ph-user"></i>
+              </div>
+              <div class="topbar-user-info">
+                <span class="topbar-user-name">Admin</span>
+                <span class="topbar-user-role">Administrador</span>
+              </div>
+            </div>
+            <div class="profile-dropdown hidden" id="profileDropdown">
+              <div class="profile-dropdown-header">
+                <div class="dropdown-avatar">
+                  <i class="ph ph-user"></i>
+                </div>
+                <div class="dropdown-user-info">
+                  <h4 class="dropdown-name" id="dropdownProfileName">Admin</h4>
+                  <p class="dropdown-role">Administrador</p>
+                </div>
+              </div>
+              <ul class="profile-dropdown-list">
+                <li onclick="showPage('settingsPage'); closeProfileDropdown();">
+                  <i class="ph ph-gear"></i>
+                  <span>Configurações da Conta</span>
+                </li>
+                <li onclick="document.getElementById('themeToggleSwitch').click(); closeProfileDropdown();">
+                  <i class="ph ph-moon"></i>
+                  <span>Alternar Tema</span>
+                </li>
+                <li class="logout-item" id="dropdownLogoutBtn">
+                  <i class="ph ph-sign-out"></i>
+                  <span style="font-weight: 600;">Sair da Conta</span>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
@@ -96,50 +140,135 @@
         </div>
 
         <div class="cards">
+          <!-- CARD 1: OCORRÊNCIAS ATIVAS -->
           <div class="card">
-            <div class="card-icon card-icon-red">
-              <i class="ph ph-warning-circle"></i>
+            <div class="card-left">
+              <div class="card-icon card-icon-red">
+                <i class="ph ph-warning-circle"></i>
+              </div>
+              <div class="card-info">
+                <p>Ocorrências Ativas</p>
+                <h2 id="totalOcorrencias">0</h2>
+              </div>
             </div>
-            <div class="card-info">
-              <p>Ocorrências Ativas</p>
-              <h2 id="totalOcorrencias">0</h2>
+            <div class="progress-container">
+              <svg class="progress-ring" width="56" height="56">
+                <defs>
+                  <linearGradient id="gradient-red" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ef4444" />
+                    <stop offset="100%" stop-color="#b91c1c" />
+                  </linearGradient>
+                </defs>
+                <circle class="progress-ring-bg" cx="28" cy="28" r="22" stroke-width="4" fill="transparent" />
+                <circle class="progress-ring-circle" id="progressOcorrencias" cx="28" cy="28" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" stroke-width="4" fill="transparent" stroke="url(#gradient-red)" stroke-linecap="round" />
+              </svg>
+              <div class="progress-text" id="progressTextOcorrencias">0%</div>
             </div>
           </div>
 
+          <!-- CARD 2: VEÍCULOS EM ROTA -->
           <div class="card">
-            <div class="card-icon card-icon-blue">
-              <i class="ph ph-navigation-arrow"></i>
+            <div class="card-left">
+              <div class="card-icon card-icon-blue">
+                <i class="ph ph-navigation-arrow"></i>
+              </div>
+              <div class="card-info">
+                <p>Veículos em Rota</p>
+                <h2 id="viaturasRota">0</h2>
+              </div>
             </div>
-            <div class="card-info">
-              <p>Veículos em Rota</p>
-              <h2 id="viaturasRota">0</h2>
+            <div class="progress-container">
+              <svg class="progress-ring" width="56" height="56">
+                <defs>
+                  <linearGradient id="gradient-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#3b82f6" />
+                    <stop offset="100%" stop-color="#1d4ed8" />
+                  </linearGradient>
+                </defs>
+                <circle class="progress-ring-bg" cx="28" cy="28" r="22" stroke-width="4" fill="transparent" />
+                <circle class="progress-ring-circle" id="progressRota" cx="28" cy="28" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" stroke-width="4" fill="transparent" stroke="url(#gradient-blue)" stroke-linecap="round" />
+              </svg>
+              <div class="progress-text" id="progressTextRota">0%</div>
             </div>
           </div>
 
+          <!-- CARD 3: PROFISSIONAIS DISPONÍVEIS -->
           <div class="card">
-            <div class="card-icon card-icon-green">
-              <i class="ph ph-users"></i>
+            <div class="card-left">
+              <div class="card-icon card-icon-green">
+                <i class="ph ph-users"></i>
+              </div>
+              <div class="card-info">
+                <p>Profissionais Disponíveis</p>
+                <h2 id="equipeDisponivel">0</h2>
+              </div>
             </div>
-            <div class="card-info">
-              <p>Profissionais Disponíveis</p>
-              <h2 id="equipeDisponivel">0</h2>
+            <div class="progress-container">
+              <svg class="progress-ring" width="56" height="56">
+                <defs>
+                  <linearGradient id="gradient-green" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#10b981" />
+                    <stop offset="100%" stop-color="#047857" />
+                  </linearGradient>
+                </defs>
+                <circle class="progress-ring-bg" cx="28" cy="28" r="22" stroke-width="4" fill="transparent" />
+                <circle class="progress-ring-circle" id="progressEquipe" cx="28" cy="28" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" stroke-width="4" fill="transparent" stroke="url(#gradient-green)" stroke-linecap="round" />
+              </svg>
+              <div class="progress-text" id="progressTextEquipe">0%</div>
             </div>
           </div>
 
+          <!-- CARD 4: TOTAL DE VEÍCULOS -->
           <div class="card">
-            <div class="card-icon card-icon-yellow">
-              <i class="ph ph-ambulance"></i>
+            <div class="card-left">
+              <div class="card-icon card-icon-yellow">
+                <i class="ph ph-ambulance"></i>
+              </div>
+              <div class="card-info">
+                <p>Total de Veículos</p>
+                <h2 id="totalViaturas">0</h2>
+              </div>
             </div>
-            <div class="card-info">
-              <p>Total de Veículos</p>
-              <h2 id="totalViaturas">0</h2>
+            <div class="progress-container">
+              <svg class="progress-ring" width="56" height="56">
+                <defs>
+                  <linearGradient id="gradient-yellow" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#f59e0b" />
+                    <stop offset="100%" stop-color="#b45309" />
+                  </linearGradient>
+                </defs>
+                <circle class="progress-ring-bg" cx="28" cy="28" r="22" stroke-width="4" fill="transparent" />
+                <circle class="progress-ring-circle" id="progressFrota" cx="28" cy="28" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" stroke-width="4" fill="transparent" stroke="url(#gradient-yellow)" stroke-linecap="round" />
+              </svg>
+              <div class="progress-text" id="progressTextFrota">0%</div>
             </div>
           </div>
         </div>
 
-        <div class="alerts">
-          <h3>Alertas Recentes</h3>
-          <ul id="alertList"></ul>
+        <div class="dashboard-grid">
+          <!-- Coluna Esquerda: Alertas Operacionais -->
+          <div class="dashboard-left">
+            <div class="alerts-panel">
+              <div class="panel-header">
+                <h3><i class="ph ph-bell"></i> Alertas Operacionais</h3>
+                <span class="pulse-dot"></span>
+              </div>
+              <ul id="alertList" class="alert-list"></ul>
+            </div>
+          </div>
+
+          <!-- Coluna Direita: Linha do Tempo Operacional Live -->
+          <div class="dashboard-right">
+            <div class="timeline-panel">
+              <div class="panel-header">
+                <h3><i class="ph ph-activity"></i> Linha do Tempo Operacional</h3>
+                <span class="live-badge">LIVE</span>
+              </div>
+              <div class="timeline-container" id="liveTimeline">
+                <!-- Items will be injected dynamically -->
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1048,6 +1177,7 @@
   <script src="js/ocorrencias.js"></script>
   <script src="js/equipe_medica.js"></script>
   <script src="js/configuracoes.js"></script>
+  <div id="toastContainer" class="toast-container"></div>
 </body>
 
 </html>

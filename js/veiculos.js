@@ -253,7 +253,7 @@ document.getElementById("cancelManutencao").onclick = () => {
 document.getElementById("saveManutencao").onclick = async () => {
   const veiculoId = inputVeiculoManut.dataset.id;
 
-  if (!veiculoId) return alert("Selecione um veículo válido");
+  if (!veiculoId) return showToast("Selecione um veículo válido", "warning");
 
   const veiculo = veiculosCache.find(v => v.id == veiculoId);
   const placa = veiculo ? veiculo.placa : inputVeiculoManut.value;
@@ -434,7 +434,7 @@ function resetAbastecimentoForm() {
 document.getElementById("saveAbastecimento").onclick = async () => {
   const veiculoId = inputVeiculoAbast.dataset.id;
 
-  if (!veiculoId) return alert("Selecione um veículo válido");
+  if (!veiculoId) return showToast("Selecione um veículo válido", "warning");
 
   const veiculo = veiculosCache.find(v => v.id == veiculoId);
   const placa = veiculo ? veiculo.placa : inputVeiculoAbast.value;

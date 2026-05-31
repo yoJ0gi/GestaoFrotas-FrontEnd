@@ -232,9 +232,9 @@ document.getElementById("saveEquipeMedica").onclick = () => {
   const turno = document.getElementById("inputEquipeTurno").value;
   const obs = document.getElementById("inputEquipeObs").value.trim();
 
-  if (!nome) return alert("Por favor, informe o nome da equipe.");
-  if (!data) return alert("Por favor, selecione uma data.");
-  if (membrosSelecionadosIds.length === 0) return alert("Por favor, adicione pelo menos 1 membro à equipe.");
+  if (!nome) return showToast("Por favor, informe o nome da equipe.", "warning");
+  if (!data) return showToast("Por favor, selecione uma data.", "warning");
+  if (membrosSelecionadosIds.length === 0) return showToast("Por favor, adicione pelo menos 1 membro à equipe.", "warning");
 
   const temCondutor = membrosSelecionadosIds.some(id => {
     const f = funcionariosCache.find(func => func.id == id);
@@ -242,7 +242,7 @@ document.getElementById("saveEquipeMedica").onclick = () => {
   });
 
   if (!temCondutor) {
-    return alert("Atenção: A equipe precisa ter no mínimo 1 pessoa apta a dirigir!");
+    return showToast("Atenção: A equipe precisa ter no mínimo 1 pessoa apta a dirigir!", "error");
   }
 
   const equipeData = {

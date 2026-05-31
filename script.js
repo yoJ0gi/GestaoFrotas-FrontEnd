@@ -270,6 +270,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initAutocompletes();
   initEquipeAutocomplete();
   loadDashboard();
+  initNotificationSystem();
 
   // Configurações do Sistema
   initSettingsPage();
@@ -299,6 +300,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       window.location.href = "login.html";
     });
   }
+
+  // Inicializa o dropdown do perfil de usuário
+  initUserProfileDropdown();
+
+  // Inicializa o toggle do menu inferior da sidebar
+  initSidebarBottomToggle();
 });
 function toggleDropdown() {
   document.getElementById("options").classList.toggle("active");
@@ -308,4 +315,248 @@ function selectOption(valor) {
   document.querySelector(".selected").innerText = valor + " ▼";
   document.getElementById("options").classList.remove("active");
 }
+
+function initSidebarBottomToggle() {
+  const toggleBtn = document.getElementById("sidebarBottomToggleBtn");
+  const content = document.getElementById("sidebarBottomContent");
+  const icon = document.getElementById("sidebarBottomToggleIcon");
+  const label = document.getElementById("sidebarBottomToggleLabel");
+
+  if (!toggleBtn || !content || !icon) return;
+
+  function applyState(isCollapsed) {
+    if (isCollapsed) {
+      content.classList.add("collapsed");
+      icon.classList.remove("ph-caret-down");
+      icon.classList.add("ph-caret-up");
+      if (label) label.style.display = "";
+    } else {
+      content.classList.remove("collapsed");
+      icon.classList.remove("ph-caret-up");
+      icon.classList.add("ph-caret-down");
+      if (label) label.style.display = "none";
+    }
+  }
+
+  // Check persisted state (default: open = false collapsed)
+  const saved = localStorage.getItem("medfleet_sidebar_bottom_collapsed");
+  const isCollapsed = saved === "true";
+  applyState(isCollapsed);
+
+  toggleBtn.addEventListener("click", () => {
+    const collapsed = content.classList.contains("collapsed");
+    const next = !collapsed;
+    applyState(next);
+    localStorage.setItem("medfleet_sidebar_bottom_collapsed", String(next));
+  });
+}
+
+function showToast(message, type = "success") {
+  const container = document.getElementById("toastContainer");
+  if (!container) return;
+
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type}`;
+
+  let iconClass = "ph ph-check-circle";
+  if (type === "warning") {
+    iconClass = "ph ph-warning-circle";
+  } else if (type === "error" || type === "emergency") {
+    iconClass = "ph ph-x-circle";
+  }
+
+  toast.innerHTML = `
+    <div class="toast-icon">
+      <i class="${iconClass}"></i>
+    </div>
+    <span class="toast-message">${message}</span>
+  `;
+
+  container.appendChild(toast);
+
+  // Trigger sound if error or emergency
+  if (type === "error" || type === "emergency") {
+    if (typeof playAlertSound === "function") {
+      const sound = localStorage.getItem("medfleet_settings_sound") || "sirene";
+      playAlertSound(sound);
+    }
+  }
+
+  // Force reflow and add show class
+  setTimeout(() => {
+    toast.classList.add("show");
+  }, 10);
+
+  // Remove after 4 seconds
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => {
+      toast.remove();
+    }, 400); // match transition duration
+  }, 4000);
+}
+
+function initNotificationSystem() {
+  const btn = document.getElementById("notificationBtn");
+  const dropdown = document.getElementById("notificationDropdown");
+  const btnMarkRead = document.getElementById("btnMarkAllRead");
+
+  if (!btn || !dropdown) return;
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    
+    // Toggle active classes
+    const isHidden = dropdown.classList.contains("hidden");
+    if (isHidden) {
+      closeProfileDropdown(); // close user profile dropdown if open!
+      updateNotificationDropdown();
+      dropdown.classList.remove("hidden");
+      setTimeout(() => dropdown.classList.add("active"), 10);
+    } else {
+      closeNotificationDropdown();
+    }
+  });
+
+  // Dismiss on click outside
+  document.addEventListener("click", (e) => {
+    if (!dropdown.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+      closeNotificationDropdown();
+    }
+  });
+
+  if (btnMarkRead) {
+    btnMarkRead.addEventListener("click", () => {
+      // Clear notification dot
+      const dot = btn.querySelector(".notification-dot");
+      if (dot) dot.remove();
+
+      // Clear alerts
+      const list = document.getElementById("dropdownNotificationList");
+      if (list) {
+        list.innerHTML = `
+          <li style="justify-content: center; align-items: center; padding: 24px; color: var(--text-muted); flex-direction: column; gap: 8px;">
+            <i class="ph ph-check-circle" style="font-size: 32px; color: #10b981;"></i>
+            <span>Nenhum alerta recente</span>
+          </li>
+        `;
+      }
+      
+      showToast("Alertas marcados como lidos!", "success");
+      closeNotificationDropdown();
+    });
+  }
+}
+
+function closeNotificationDropdown() {
+  const dropdown = document.getElementById("notificationDropdown");
+  if (!dropdown) return;
+  dropdown.classList.remove("active");
+  setTimeout(() => dropdown.classList.add("hidden"), 300);
+}
+
+function updateNotificationDropdown() {
+  const list = document.getElementById("dropdownNotificationList");
+  if (!list) return;
+
+  list.innerHTML = "";
+  const items = [];
+
+  // Fetch critical/high active occurrences
+  if (typeof ocorrenciasCache !== "undefined") {
+    ocorrenciasCache.forEach(o => {
+      if (o.status === "Ativa") {
+        const isCritical = o.prioridade === "Crítica";
+        items.push(`
+          <li onclick="showPage('ocorrenciasPage'); selectOcorrencia(${o.id}); closeNotificationDropdown();">
+            <i class="ph ${isCritical ? "ph-warning-octagon" : "ph-warning"}" style="color: ${isCritical ? "#ef4444" : "#f59e0b"};"></i>
+            <div>
+              <div style="font-weight: 600; color: var(--text);">${o.titulo}</div>
+              <div style="font-size: 11px; margin-top: 2px;">Paciente: ${o.paciente} | Prioridade: ${o.prioridade}</div>
+            </div>
+          </li>
+        `);
+      }
+    });
+  }
+
+  // Fetch vehicles in maintenance
+  if (typeof veiculosCache !== "undefined") {
+    veiculosCache.forEach((v, idx) => {
+      const s = v.status || (idx % 4 === 1 ? "Em rota" : idx % 4 === 2 ? "Emergência" : idx % 4 === 3 ? "Manutenção" : "Disponível");
+      if (s === "Manutenção") {
+        items.push(`
+          <li onclick="showPage('manutencoesPage'); closeNotificationDropdown();">
+            <i class="ph ph-wrench" style="color: #f59e0b;"></i>
+            <div>
+              <div style="font-weight: 600; color: var(--text);">Manutenção: Viatura ${v.placa}</div>
+              <div style="font-size: 11px; margin-top: 2px;">Ambulância ${v.modelo} indisponível na oficina.</div>
+            </div>
+          </li>
+        `);
+      }
+    });
+  }
+
+  // Check list empty
+  if (items.length === 0) {
+    list.innerHTML = `
+      <li style="justify-content: center; align-items: center; padding: 24px; color: var(--text-muted); flex-direction: column; gap: 8px;">
+        <i class="ph ph-check-circle" style="font-size: 32px; color: #10b981;"></i>
+        <span>Nenhum alerta recente</span>
+      </li>
+    `;
+  } else {
+    list.innerHTML = items.join("");
+  }
+}
+
+function initUserProfileDropdown() {
+  const btn = document.getElementById("userProfileBtn");
+  const dropdown = document.getElementById("profileDropdown");
+  const logoutBtn = document.getElementById("dropdownLogoutBtn");
+
+  if (!btn || !dropdown) return;
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    
+    // Toggle active classes
+    const isHidden = dropdown.classList.contains("hidden");
+    if (isHidden) {
+      closeNotificationDropdown(); // close notifications dropdown if open!
+      dropdown.classList.remove("hidden");
+      setTimeout(() => dropdown.classList.add("active"), 10);
+    } else {
+      closeProfileDropdown();
+    }
+  });
+
+  // Dismiss on click outside
+  document.addEventListener("click", (e) => {
+    if (!dropdown.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+      closeProfileDropdown();
+    }
+  });
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      closeProfileDropdown();
+      setTimeout(() => {
+        if (confirm("Deseja realmente sair do sistema (Logoff)?")) {
+          localStorage.removeItem("token");
+          window.location.href = "login.html";
+        }
+      }, 100);
+    });
+  }
+}
+
+function closeProfileDropdown() {
+  const dropdown = document.getElementById("profileDropdown");
+  if (!dropdown) return;
+  dropdown.classList.remove("active");
+  setTimeout(() => dropdown.classList.add("hidden"), 300);
+}
+
 console.log("Script carregou");

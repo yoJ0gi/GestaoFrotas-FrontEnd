@@ -89,15 +89,23 @@ function loadUserProfile() {
   if (topbarName) topbarName.textContent = name;
   if (welcomeTitle) welcomeTitle.innerHTML = `Bem-vindo de volta, ${name} 👋`;
 
+  const dropdownName = document.getElementById("dropdownProfileName");
+  if (dropdownName) dropdownName.textContent = name;
+
   const topbarAvatar = document.querySelector(".topbar-avatar");
+  const dropdownAvatar = document.querySelector(".dropdown-avatar");
+  const iconMap = {
+    admin: "ph-user-gear",
+    medico: "ph-stethoscope",
+    enfermeiro: "ph-first-aid",
+    socorrista: "ph-siren"
+  };
+
   if (topbarAvatar) {
-    const iconMap = {
-      admin: "ph-user-gear",
-      medico: "ph-stethoscope",
-      enfermeiro: "ph-first-aid",
-      socorrista: "ph-siren"
-    };
     topbarAvatar.innerHTML = `<i class="ph ${iconMap[avatar] || "ph-user"}"></i>`;
+  }
+  if (dropdownAvatar) {
+    dropdownAvatar.innerHTML = `<i class="ph ${iconMap[avatar] || "ph-user"}"></i>`;
   }
 }
 
@@ -106,7 +114,7 @@ function saveUserProfile() {
   const email = document.getElementById("settingProfileEmail").value.trim();
 
   if (!name || !email) {
-    return alert("Por favor, preencha o Nome e o E-mail.");
+    return showToast("Por favor, preencha o Nome e o E-mail.", "warning");
   }
 
   const selectedAvatarOpt = document.querySelector(".avatar-option.selected");
@@ -118,12 +126,12 @@ function saveUserProfile() {
 
   if (oldPass || newPass || confirmPass) {
     if (newPass.length < 6) {
-      return alert("A nova senha deve ter no mínimo 6 caracteres.");
+      return showToast("A nova senha deve ter no mínimo 6 caracteres.", "warning");
     }
     if (newPass !== confirmPass) {
-      return alert("A nova senha e a confirmação não conferem.");
+      return showToast("A nova senha e a confirmação não conferem.", "warning");
     }
-    alert("Senha atualizada com sucesso no banco local!");
+    showToast("Senha atualizada com sucesso no banco local!", "success");
     document.getElementById("settingProfileOldPass").value = "";
     document.getElementById("settingProfileNewPass").value = "";
     document.getElementById("settingProfileConfirmPass").value = "";
@@ -134,7 +142,7 @@ function saveUserProfile() {
   localStorage.setItem("medfleet_profile_email", email);
 
   loadUserProfile();
-  alert("Perfil operacional atualizado com sucesso!");
+  showToast("Perfil operacional atualizado com sucesso!", "success");
 }
 
 function playAlertSound(type) {
@@ -267,8 +275,10 @@ function initCacheCleaner() {
     btnClear.addEventListener("click", () => {
       if (confirm("Atenção: Isso redefinirá todas as configurações de perfil, preferências de som, layout compacto e caches locais simulados. Deseja prosseguir?")) {
         localStorage.clear();
-        alert("Todos os dados foram redefinidos. A página será recarregada.");
-        window.location.reload();
+        showToast("Todos os dados foram redefinidos. A página será recarregada.", "success");
+        setTimeout(() => {
+          window.location.reload();
+        }, 1800);
       }
     });
   }
