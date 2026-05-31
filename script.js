@@ -355,7 +355,7 @@ async function loadVeiculos() {
         </span>
       </div>
       <div class="tc-image">
-        <img src="ambulance.png" alt="Ambulância" />
+        <img src="assets/ambulance.png" alt="Ambulância" />
       </div>
     `;
 
