@@ -826,6 +826,210 @@
         </div>
       </section>
 
+      <!-- SEÇÃO: CONFIGURAÇÕES -->
+      <section id="settingsPage" class="page">
+        <div class="page-header">
+          <div>
+            <h1>Configurações do Sistema</h1>
+            <p class="subtitle">Gerencie seu perfil, preferências visuais e alertas operacionais</p>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <!-- Menu de Abas Lateral -->
+          <div class="settings-nav">
+            <button class="settings-nav-btn active" data-tab="tabPerfil">
+              <i class="ph ph-user-gear"></i> Meu Perfil
+            </button>
+            <button class="settings-nav-btn" data-tab="tabNotificacoes">
+              <i class="ph ph-bell-ringing"></i> Notificações
+            </button>
+            <button class="settings-nav-btn" data-tab="tabAparencia">
+              <i class="ph ph-palette"></i> Aparência & Sistema
+            </button>
+          </div>
+
+          <!-- Painel Principal de Conteúdo -->
+          <div class="settings-content-card">
+            <!-- ABA 1: MEU PERFIL -->
+            <div id="tabPerfil" class="settings-tab-pane active">
+              <h3>Informações Pessoais</h3>
+              <p class="tab-desc">Personalize sua foto de exibição e suas informações de contato operacionais.</p>
+              
+              <div class="profile-avatar-section">
+                <label>Selecione seu Avatar Operacional</label>
+                <div class="avatar-selector-grid">
+                  <div class="avatar-option selected" data-avatar="admin">
+                    <i class="ph ph-user-gear"></i>
+                    <span>Admin</span>
+                  </div>
+                  <div class="avatar-option" data-avatar="medico">
+                    <i class="ph ph-stethoscope"></i>
+                    <span>Médico</span>
+                  </div>
+                  <div class="avatar-option" data-avatar="enfermeiro">
+                    <i class="ph ph-first-aid"></i>
+                    <span>Enfermeiro</span>
+                  </div>
+                  <div class="avatar-option" data-avatar="socorrista">
+                    <i class="ph ph-siren"></i>
+                    <span>Socorrista</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-grid" style="margin-top: 24px;">
+                <div class="form-group">
+                  <label>Nome Completo</label>
+                  <input type="text" id="settingProfileName" placeholder="Ex: Lucca Admin" />
+                </div>
+                <div class="form-group">
+                  <label>E-mail Institucional</label>
+                  <input type="email" id="settingProfileEmail" placeholder="Ex: admin@medfleet.com" />
+                </div>
+                <div class="form-group">
+                  <label>Matrícula Hospitalar (Bloqueado)</label>
+                  <input type="text" id="settingProfileMatricula" value="MF-2026-987" disabled />
+                </div>
+                <div class="form-group">
+                  <label>Cargo Operacional (Bloqueado)</label>
+                  <input type="text" id="settingProfileCargo" value="Administrador Geral" disabled />
+                </div>
+              </div>
+
+              <hr class="settings-hr" />
+
+              <h3>Alterar Senha</h3>
+              <p class="tab-desc">Mantenha sua conta segura alterando sua credencial de acesso regularmente.</p>
+              
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Senha Atual</label>
+                  <input type="password" id="settingProfileOldPass" placeholder="••••••••" />
+                </div>
+                <div class="form-group" style="grid-column: span 1;">
+                  <label>Nova Senha</label>
+                  <input type="password" id="settingProfileNewPass" placeholder="Mínimo 6 caracteres" />
+                </div>
+                <div class="form-group" style="grid-column: span 1;">
+                  <label>Confirmar Nova Senha</label>
+                  <input type="password" id="settingProfileConfirmPass" placeholder="Repita a nova senha" />
+                </div>
+              </div>
+
+              <div class="settings-footer">
+                <button id="btnSaveProfile" class="btn-primary" style="border:none; cursor:pointer;"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+              </div>
+            </div>
+
+            <!-- ABA 2: NOTIFICAÇÕES -->
+            <div id="tabNotificacoes" class="settings-tab-pane">
+              <h3>Alertas de Emergência</h3>
+              <p class="tab-desc">Configure os efeitos sonoros para as ocorrências que demandam despacho imediato.</p>
+
+              <div class="form-group" style="max-width: 400px; margin-bottom: 24px;">
+                <label>Som de Alerta Operacional</label>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                  <select id="settingSoundAlert" style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text);">
+                    <option value="sirene">Sirene de Ambulância (Urgente)</option>
+                    <option value="bipe">Bipe Eletrônico (Atenção)</option>
+                    <option value="suave">Notificação Suave (Discreto)</option>
+                    <option value="nenhum">Nenhum (Modo Silencioso)</option>
+                  </select>
+                  <button id="btnTestSound" class="btn-outline" style="padding: 12px 18px; display: inline-flex; align-items: center; gap: 8px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text); cursor: pointer; transition: 0.2s;"><i class="ph ph-speaker-high"></i> Testar</button>
+                </div>
+              </div>
+
+              <hr class="settings-hr" />
+
+              <h3>Preferências de Alerta</h3>
+              <p class="tab-desc">Gerencie a forma como os avisos visuais e lembretes são exibidos na tela.</p>
+
+              <div class="settings-option-list">
+                <div class="settings-option-item">
+                  <div class="option-info">
+                    <h4>Notificações no Navegador (Push)</h4>
+                    <p>Exibir alertas nativos do navegador quando novas ocorrências forem abertas por outros setores.</p>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="settingNotifyPush" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div class="settings-option-item">
+                  <div class="option-info">
+                    <h4>Lembretes de Revisão de Viatura</h4>
+                    <p>Disparar um aviso quando uma ambulância ativa atingir quilometragem de manutenção preventiva.</p>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="settingNotifyMaint" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- ABA 3: APARÊNCIA & SISTEMA -->
+            <div id="tabAparencia" class="settings-tab-pane">
+              <h3>Interface Operacional</h3>
+              <p class="tab-desc">Ajuste os parâmetros visuais para tornar o uso do painel mais confortável.</p>
+
+              <div class="settings-option-list">
+                <div class="settings-option-item">
+                  <div class="option-info">
+                    <h4>Modo Escuro (Dark Mode)</h4>
+                    <p>Alterna para a paleta escura que reduz a fadiga ocular durante plantões noturnos.</p>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="settingDarkModeToggle">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div class="settings-option-item">
+                  <div class="option-info">
+                    <h4>Layout de Alta Densidade (Modo Compacto)</h4>
+                    <p>Reduz paddings e espaçamentos dos cards. Perfeito para monitorar múltiplos veículos sem rolar a página.</p>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="settingCompactLayout">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <hr class="settings-hr" />
+
+              <h3>Parâmetros de Localização</h3>
+              <p class="tab-desc">Regule a exibição de horários das ocorrências registradas no sistema.</p>
+
+              <div class="form-group" style="max-width: 400px; margin-bottom: 24px;">
+                <label>Fuso Horário Operacional</label>
+                <select id="settingTimezone" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text);">
+                  <option value="America/Sao_Paulo">América do Sul (Brasília - GMT-3)</option>
+                  <option value="America/Manaus">América do Sul (Manaus - GMT-4)</option>
+                  <option value="GMT">Horário Padrão de Greenwich (GMT-0)</option>
+                </select>
+              </div>
+
+              <hr class="settings-hr" />
+
+              <h3 style="color: #ef4444;">Área de Segurança</h3>
+              <p class="tab-desc">Opções que afetam os caches locais guardados em seu navegador.</p>
+
+              <div style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                <div>
+                  <h4 style="color: #ef4444; font-size: 14px; font-weight: 600;">Redefinir Dados de Simulação</h4>
+                  <p style="font-size: 12px; color: var(--text-light); margin-top: 2px;">Isso irá apagar todo o cache do localStorage e recarregar os dados padrões da frota hospitalar.</p>
+                </div>
+                <button id="btnClearCache" class="btn-outline-danger" style="padding: 10px 16px; font-size: 13px; font-weight: 600; border-radius: 10px; border: 1px solid #ef4444; background: transparent; color: #ef4444; cursor: pointer; transition: 0.2s;">Redefinir Dados</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 

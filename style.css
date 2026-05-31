@@ -1515,3 +1515,283 @@ html.dark ::-webkit-scrollbar-thumb {
 html.dark ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
+
+/* ================= SETTINGS PAGE SYSTEM ================= */
+.settings-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 32px;
+  margin-top: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .settings-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.settings-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-light);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  width: 100%;
+}
+
+.settings-nav-btn i {
+  font-size: 18px;
+}
+
+.settings-nav-btn:hover {
+  background: var(--bg-main);
+  color: var(--text);
+  transform: translateX(4px);
+}
+
+.settings-nav-btn.active {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-left: 3px solid var(--primary);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.settings-content-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+}
+
+.settings-tab-pane {
+  display: none;
+  animation: fade 0.3s ease;
+}
+
+.settings-tab-pane.active {
+  display: block;
+}
+
+.settings-tab-pane h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.tab-desc {
+  font-size: 13.5px;
+  color: var(--text-light);
+  margin-bottom: 24px;
+}
+
+.settings-hr {
+  border: 0;
+  height: 1px;
+  background: var(--border);
+  margin: 32px 0;
+}
+
+.settings-footer {
+  margin-top: 32px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* AVATAR SELECTOR */
+.profile-avatar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-avatar-section label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.avatar-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .avatar-selector-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.avatar-option {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  background: var(--bg-main);
+  transition: all 0.25s ease;
+}
+
+.avatar-option i {
+  font-size: 28px;
+  color: var(--text-light);
+  transition: color 0.2s;
+}
+
+.avatar-option span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.avatar-option:hover {
+  border-color: var(--secondary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+}
+
+.avatar-option.selected {
+  border-color: var(--secondary);
+  background: var(--primary-light);
+}
+
+.avatar-option.selected i {
+  color: var(--primary);
+}
+
+.avatar-option.selected span {
+  color: var(--primary);
+}
+
+/* OPTIONS LIST & SWITCHES */
+.settings-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-option-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-option-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.option-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.option-info h4 {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.option-info p {
+  font-size: 12.5px;
+  color: var(--text-light);
+  line-height: 1.4;
+}
+
+/* ================= COMPACT MODE LAYOUT DENSITY ================= */
+.content.compact {
+  padding: 14px 20px !important;
+}
+
+.content.compact .topbar {
+  padding-bottom: 12px !important;
+  margin-bottom: 4px !important;
+}
+
+.content.compact .welcome-banner {
+  margin-bottom: 14px !important;
+}
+
+.content.compact .welcome-title {
+  font-size: 22px !important;
+}
+
+.content.compact .page-header {
+  margin-bottom: 12px !important;
+}
+
+.content.compact .page-header h1 {
+  font-size: 20px !important;
+}
+
+.content.compact .cards {
+  gap: 12px !important;
+}
+
+.content.compact .card {
+  padding: 12px 16px !important;
+  border-radius: 12px !important;
+}
+
+.content.compact .card-info h2 {
+  font-size: 20px !important;
+}
+
+.content.compact .tracking-grid {
+  gap: 12px !important;
+  padding-top: 4px !important;
+}
+
+.content.compact .tracking-card {
+  padding: 12px !important;
+  border-radius: 12px !important;
+}
+
+.content.compact .tc-header {
+  margin-bottom: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+.content.compact .tc-image img {
+  height: 90px !important;
+}
+
+.content.compact #addVeiculoBtn,
+.content.compact #addFuncionarioBtn,
+.content.compact #addOcorrenciaBtn,
+.content.compact #addEquipeBtn {
+  padding: 10px 18px !important;
+  font-size: 13.5px !important;
+  border-radius: 10px !important;
+}
