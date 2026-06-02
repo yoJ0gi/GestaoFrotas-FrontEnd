@@ -1,4 +1,3 @@
-// Proteção de rota no Front-end: redireciona para login se não houver token
 const token = localStorage.getItem("token");
 
 if (!token) {
@@ -7,9 +6,6 @@ if (!token) {
 
 const API = "http://127.0.0.1:8000/api";
 
-// ================= AUTH FETCH INTERCEPTOR =================
-// Injeta automaticamente o header Authorization: Token <token> em todas
-// as requisições para a API, sem precisar alterar nenhum fetch individual.
 const _originalFetch = window.fetch;
 window.fetch = function(url, options = {}) {
   if (typeof url === 'string' && url.startsWith(API)) {
@@ -55,16 +51,16 @@ document.querySelectorAll(".sidebar-nav-main a, .sidebar-submenu a").forEach((li
   link.addEventListener("click", (e) => {
     e.preventDefault();
     
-    // Sub-link clicked logic
+    
     if (link.closest(".sidebar-submenu")) {
       const filter = link.getAttribute("data-filter");
       currentFuncionarioFilter = filter;
       
-      // Update sub-link active state
+      
       document.querySelectorAll(".sidebar-submenu a").forEach(sub => sub.classList.remove("active"));
       link.classList.add("active");
       
-      // Highlight parent link
+      
       const parentLink = document.querySelector('[data-target="funcionariosPage"]');
       if (parentLink) {
         document.querySelectorAll(".sidebar-nav-main a").forEach(l => {
@@ -79,7 +75,7 @@ document.querySelectorAll(".sidebar-nav-main a, .sidebar-submenu a").forEach((li
 
     const target = link.getAttribute("data-target");
     
-    // Parent link clicked
+    
     if (target === "funcionariosPage") {
       currentFuncionarioFilter = null;
       document.querySelectorAll(".sidebar-submenu a").forEach(sub => sub.classList.remove("active"));
@@ -101,7 +97,7 @@ function showPage(pageId) {
   const targetLink = document.querySelector(`[data-target="${pageId}"]:not(.sidebar-submenu a)`);
   if (targetLink) targetLink.classList.add("active");
 
-  // Destaca o botão Configurações se for a página ativa
+  
   const settingsBtn = document.getElementById("settingsLink");
   if (settingsBtn) {
     if (pageId === "settingsPage") {
@@ -111,7 +107,7 @@ function showPage(pageId) {
     }
   }
 
-  // Handle submenu open/close
+  
   const submenu = document.getElementById("funcionariosSubmenu");
   if (submenu) {
     if (pageId === "funcionariosPage") {
@@ -124,7 +120,6 @@ function showPage(pageId) {
   loadPageData(pageId);
 }
 
-// ================= SHOW/CLOSE DETAILS =================
 const panelMap = {
   veiculos:     { sidebar: 'veiculosSidebar',     detail: 'veiculosDetail' },
   funcionarios: { sidebar: 'funcionariosSidebar', detail: 'funcionariosDetail' },
@@ -150,7 +145,6 @@ function closeDetails(section) {
   if (sidebar) sidebar.classList.remove('hidden');
 }
 
-// ================= THEME TOGGLE =================
 function initTheme() {
   const saved = localStorage.getItem('medfleet-theme');
   const toggle = document.getElementById('themeToggleSwitch');
@@ -272,7 +266,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadDashboard();
   initNotificationSystem();
 
-  // Configurações do Sistema
+  
   initSettingsPage();
   loadUserProfile();
   loadNotificationSettings();
@@ -282,7 +276,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initTimezone();
   initCacheCleaner();
 
-  // Escuta o botão de configurações na barra lateral
+  
   const settingsBtn = document.getElementById("settingsLink");
   if (settingsBtn) {
     settingsBtn.addEventListener("click", (e) => {
@@ -291,7 +285,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Escuta o botão de logout na barra lateral
+  
   const logoutBtn = document.getElementById("logoutLink");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", (e) => {
@@ -301,10 +295,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Inicializa o dropdown do perfil de usuário
+  
   initUserProfileDropdown();
 
-  // Inicializa o toggle do menu inferior da sidebar
+  
   initSidebarBottomToggle();
 });
 function toggleDropdown() {
@@ -338,7 +332,7 @@ function initSidebarBottomToggle() {
     }
   }
 
-  // Check persisted state (default: open = false collapsed)
+  
   const saved = localStorage.getItem("medfleet_sidebar_bottom_collapsed");
   const isCollapsed = saved === "true";
   applyState(isCollapsed);
@@ -374,25 +368,15 @@ function showToast(message, type = "success") {
 
   container.appendChild(toast);
 
-  // Trigger sound if error or emergency
-  if (type === "error" || type === "emergency") {
-    if (typeof playAlertSound === "function") {
-      const sound = localStorage.getItem("medfleet_settings_sound") || "sirene";
-      playAlertSound(sound);
-    }
-  }
-
-  // Force reflow and add show class
   setTimeout(() => {
     toast.classList.add("show");
   }, 10);
 
-  // Remove after 4 seconds
   setTimeout(() => {
     toast.classList.remove("show");
     setTimeout(() => {
       toast.remove();
-    }, 400); // match transition duration
+    }, 400);
   }, 4000);
 }
 
@@ -406,10 +390,10 @@ function initNotificationSystem() {
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
     
-    // Toggle active classes
+    
     const isHidden = dropdown.classList.contains("hidden");
     if (isHidden) {
-      closeProfileDropdown(); // close user profile dropdown if open!
+      closeProfileDropdown(); 
       updateNotificationDropdown();
       dropdown.classList.remove("hidden");
       setTimeout(() => dropdown.classList.add("active"), 10);
@@ -418,7 +402,7 @@ function initNotificationSystem() {
     }
   });
 
-  // Dismiss on click outside
+  
   document.addEventListener("click", (e) => {
     if (!dropdown.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
       closeNotificationDropdown();
@@ -427,11 +411,11 @@ function initNotificationSystem() {
 
   if (btnMarkRead) {
     btnMarkRead.addEventListener("click", () => {
-      // Clear notification dot
+      
       const dot = btn.querySelector(".notification-dot");
       if (dot) dot.remove();
 
-      // Clear alerts
+      
       const list = document.getElementById("dropdownNotificationList");
       if (list) {
         list.innerHTML = `
@@ -462,7 +446,7 @@ function updateNotificationDropdown() {
   list.innerHTML = "";
   const items = [];
 
-  // Fetch critical/high active occurrences
+  
   if (typeof ocorrenciasCache !== "undefined") {
     ocorrenciasCache.forEach(o => {
       if (o.status === "Ativa") {
@@ -480,7 +464,7 @@ function updateNotificationDropdown() {
     });
   }
 
-  // Fetch vehicles in maintenance
+  
   if (typeof veiculosCache !== "undefined") {
     veiculosCache.forEach((v, idx) => {
       const s = v.status || (idx % 4 === 1 ? "Em rota" : idx % 4 === 2 ? "Emergência" : idx % 4 === 3 ? "Manutenção" : "Disponível");
@@ -498,7 +482,7 @@ function updateNotificationDropdown() {
     });
   }
 
-  // Check list empty
+  
   if (items.length === 0) {
     list.innerHTML = `
       <li style="justify-content: center; align-items: center; padding: 24px; color: var(--text-muted); flex-direction: column; gap: 8px;">
@@ -521,10 +505,10 @@ function initUserProfileDropdown() {
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
     
-    // Toggle active classes
+    
     const isHidden = dropdown.classList.contains("hidden");
     if (isHidden) {
-      closeNotificationDropdown(); // close notifications dropdown if open!
+      closeNotificationDropdown(); 
       dropdown.classList.remove("hidden");
       setTimeout(() => dropdown.classList.add("active"), 10);
     } else {
@@ -532,7 +516,7 @@ function initUserProfileDropdown() {
     }
   });
 
-  // Dismiss on click outside
+  
   document.addEventListener("click", (e) => {
     if (!dropdown.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
       closeProfileDropdown();

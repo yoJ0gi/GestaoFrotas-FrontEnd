@@ -1,4 +1,4 @@
-/* ================= FORM ================= */
+
 .page-inner {
   margin-top: 20px;
 }
@@ -19,7 +19,7 @@
   color: var(--text-light);
 }
 
-/* INPUTS E SELECT PADRÃO */
+
 .form-panel input,
 .form-panel select,
 .search-input {
@@ -47,7 +47,7 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
-/* SELECT CUSTOM */
+
 .form-panel select {
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -59,7 +59,7 @@
   padding-right: 35px;
 }
 
-/* ================= MODAL DE CADASTRO ================= */
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -254,7 +254,7 @@ html:not(.dark) .modal-header {
   transform: translateY(-2px);
 }
 
-/* ================= BOTÕES ================= */
+
 button {
   padding: 10px 14px;
   border: none;

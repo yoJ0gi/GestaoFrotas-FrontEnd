@@ -1,11 +1,11 @@
-/* RESET */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* FUNDO */
+
 body {
   position: relative;
   min-height: 100vh;
@@ -21,7 +21,7 @@ body {
   align-items: center;
 }
 
-/* OVERLAY ESCURO */
+
 body::before {
   content: "";
   position: absolute;
@@ -33,7 +33,7 @@ body::before {
   z-index: 0;
 }
 
-/* CAIXA LOGIN (TRANSPARENTE DE VERDADE) */
+
 .login-container {
   counter-increment: center;
   position: relative;
@@ -56,7 +56,7 @@ body::before {
   color: white;
 }
 
-/* TÍTULO */
+
 .login-container h2 {
   color: white;
   font-size: 28px;
@@ -65,7 +65,7 @@ body::before {
   letter-spacing: -0.5px;
 }
 
-/* INPUTS */
+
 .input-group {
   text-align: left;
   margin-bottom: 20px;
@@ -95,19 +95,19 @@ body::before {
   transition: all 0.3s ease;
 }
 
-/* PLACEHOLDER */
+
 .input-group input::placeholder {
   color: rgba(255,255,255,0.5);
 }
 
-/* FOCO */
+
 .input-group input:focus {
   border-color: #ffffff;
   background: rgba(255,255,255,0.18);
   box-shadow: 0 0 0 3px rgba(255,255,255,0.15);
 }
 
-/* SENHA */
+
 .senha-box {
   display: flex;
 }
@@ -133,7 +133,7 @@ body::before {
   background: rgba(255,255,255,0.22);
 }
 
-/* BOTÃO */
+
 .btn-login {
   width: 100%;
   margin-top: 10px;
@@ -158,7 +158,7 @@ body::before {
   box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
 }
 
-/* ERRO */
+
 #erro {
   color: #ff6b6b;
   margin-top: 15px;

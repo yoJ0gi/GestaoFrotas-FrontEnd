@@ -1,4 +1,4 @@
-// Redireciona se o usuário já estiver logado
+
 if (localStorage.getItem("token")) {
   window.location.href = "index.html";
 }
@@ -37,7 +37,7 @@ form.addEventListener("submit", async (e) => {
   erro.textContent = "";
 
   try {
-    // Fallback/Mock para login de demonstração local
+    
     if ((usuario === "admin" || usuario === "admin@email.com") && senha === "admin123") {
       localStorage.setItem("token", "MOCKED_JWT_TOKEN_MEDFLEET_2026_SESSION");
       window.location.href = "index.html";

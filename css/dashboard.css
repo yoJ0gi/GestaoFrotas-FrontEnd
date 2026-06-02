@@ -1,4 +1,4 @@
-/* ================= CARDS DASHBOARD ================= */
+
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -68,7 +68,7 @@
   color: var(--text);
 }
 
-/* Card Layout Adjustment for Progress Ring */
+
 .card {
   justify-content: space-between;
   align-items: center;
@@ -112,7 +112,7 @@ html.dark .progress-ring-bg {
   letter-spacing: -0.5px;
 }
 
-/* Two-Column Dashboard Layout */
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1.2fr;
@@ -175,7 +175,7 @@ html.dark .panel-header {
   color: var(--primary);
 }
 
-/* Pulsing Badge & Dots */
+
 .live-badge {
   background: rgba(239, 68, 68, 0.15);
   color: #ef4444;
@@ -214,14 +214,14 @@ html.dark .panel-header {
   100% { transform: scale(2.8); opacity: 0; }
 }
 
-/* Timeline Custom Styling */
+
 .timeline-container {
   overflow-y: auto;
   flex: 1;
   padding-right: 8px;
 }
 
-/* Scrollbar customizations */
+
 .timeline-container::-webkit-scrollbar,
 .alert-list::-webkit-scrollbar {
   width: 6px;
@@ -243,7 +243,7 @@ html.dark .alert-list::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* Timeline Item Design */
+
 .timeline-item {
   display: flex;
   gap: 16px;

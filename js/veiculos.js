@@ -199,7 +199,7 @@ async function deleteVeiculo(id) {
   loadVeiculos();
 }
 
-// ================= MANUTENÇÕES =================
+
 let usingMockManutencoes = false;
 let manutencoesCache = [
   { id: 1, veiculo_placa: "AMB-1020", data: "2026-05-10", status: "Concluída", veiculo_id: 1 },
@@ -327,7 +327,7 @@ async function deleteManutencao(id) {
   loadManutencoes();
 }
 
-// ================= ABASTECIMENTOS =================
+
 let usingMockAbastecimentos = false;
 let abastecimentosCache = [
   { id: 1, veiculo_placa: "AMB-1020", data: "2026-05-12", tipo_combustivel: "diesel", posto: "Ipiranga", litros: "50", valor: "300", veiculo_id: 1 },

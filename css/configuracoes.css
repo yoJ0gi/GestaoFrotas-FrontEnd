@@ -1,4 +1,4 @@
-/* ================= SETTINGS PAGE SYSTEM ================= */
+
 .settings-grid {
   display: grid;
   grid-template-columns: 260px 1fr;
@@ -103,7 +103,7 @@
   justify-content: flex-end;
 }
 
-/* AVATAR SELECTOR */
+
 .profile-avatar-section {
   display: flex;
   flex-direction: column;
@@ -172,7 +172,7 @@
   color: var(--primary);
 }
 
-/* OPTIONS LIST & SWITCHES */
+
 .settings-option-list {
   display: flex;
   flex-direction: column;

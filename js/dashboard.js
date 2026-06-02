@@ -8,7 +8,7 @@ function updateProgressRing(circleId, textId, percent) {
   
   circle.style.strokeDasharray = `${circumference} ${circumference}`;
   
-  // Animate dash offset
+  
   const offset = circumference - (percent / 100 * circumference);
   circle.style.strokeDashoffset = offset;
   
@@ -22,7 +22,7 @@ function loadTimeline() {
 
   const events = [];
 
-  // Let's process active/recent occurrences
+  
   ocorrenciasCache.forEach((o, index) => {
     let icon = "ph-warning-octagon";
     let iconClass = "timeline-icon-red";
@@ -43,7 +43,7 @@ function loadTimeline() {
     events.push({ title, desc, time, icon, iconClass, timestamp: Date.now() - (5 + index * 12) * 60000 });
   });
 
-  // Let's add some employee status events
+  
   funcionariosCache.slice(0, 3).forEach((f, index) => {
     let icon = "ph-user-check";
     let iconClass = "timeline-icon-green";
@@ -59,7 +59,7 @@ function loadTimeline() {
     events.push({ title, desc, time, icon, iconClass, timestamp: Date.now() - (15 + index * 18) * 60000 });
   });
 
-  // Let's add vehicle events from veiculosCache
+  
   if (typeof veiculosCache !== "undefined" && veiculosCache.length > 0) {
     veiculosCache.slice(0, 2).forEach((v, index) => {
       let icon = "ph-ambulance";
@@ -82,7 +82,7 @@ function loadTimeline() {
       events.push({ title, desc, time, icon, iconClass, timestamp: Date.now() - (8 + index * 15) * 60000 });
     });
   } else {
-    // Fallback/standard vehicle event
+    
     events.push({
       title: "Viatura AMB-1020",
       desc: "Check-list operacional matutino finalizado sem inconformidades.",
@@ -93,7 +93,7 @@ function loadTimeline() {
     });
   }
 
-  // Sort events by timestamp desc
+  
   events.sort((a, b) => b.timestamp - a.timestamp);
 
   events.forEach(ev => {
@@ -127,7 +127,7 @@ async function loadDashboard() {
     const equipeDisponivelEl = document.getElementById("equipeDisponivel");
     const totalViaturasEl = document.getElementById('totalViaturas');
 
-    // Values update
+    
     const totalOcor = ocorrenciasCache.length;
     const activeOcor = ocorrenciasCache.filter(o => o.status === "Ativa" || o.status === "Em Atendimento").length;
     
@@ -150,13 +150,13 @@ async function loadDashboard() {
     if (equipeDisponivelEl) equipeDisponivelEl.textContent = disponiveis;
     if (totalViaturasEl) totalViaturasEl.textContent = totalVeic;
 
-    // Progress rings calculations
+    
     const pctOcor = totalOcor > 0 ? (activeOcor / totalOcor) * 100 : 0;
     const pctRota = totalVeic > 0 ? (inRoute / totalVeic) * 100 : 0;
     const pctEquipe = totalFunc > 0 ? (disponiveis / totalFunc) * 100 : 0;
     const pctFrota = totalVeic > 0 ? (operacionais / totalVeic) * 100 : 0;
 
-    // Animate progress rings
+    
     setTimeout(() => {
       updateProgressRing("progressOcorrencias", "progressTextOcorrencias", pctOcor);
       updateProgressRing("progressRota", "progressTextRota", pctRota);
@@ -164,13 +164,13 @@ async function loadDashboard() {
       updateProgressRing("progressFrota", "progressTextFrota", pctFrota);
     }, 100);
 
-    // Load Alert List
+    
     const alertList = document.getElementById("alertList");
     if (alertList) {
       alertList.innerHTML = "";
       
       const alerts = [];
-      // 1. Critical occurrences
+      
       ocorrenciasCache.forEach(o => {
         if (o.status === "Ativa" && o.prioridade === "Crítica") {
           alerts.push(`<li onclick="showPage('ocorrenciasPage'); selectOcorrencia(${o.id});" style="cursor: pointer;"><i class="ph ph-warning-octagon" style="color: #ef4444; font-size: 18px; flex-shrink: 0;"></i> <div><strong>Urgência Crítica:</strong> ${o.titulo} para paciente ${o.paciente}.</div></li>`);
@@ -179,7 +179,7 @@ async function loadDashboard() {
         }
       });
 
-      // 2. Vehicles in maintenance
+      
       veiculosCache.forEach((v, idx) => {
         const s = v.status || (idx % 4 === 1 ? "Em rota" : idx % 4 === 2 ? "Emergência" : idx % 4 === 3 ? "Manutenção" : "Disponível");
         if (s === "Manutenção") {
@@ -187,7 +187,7 @@ async function loadDashboard() {
         }
       });
 
-      // 3. Fallbacks if no alerts
+      
       if (alerts.length === 0) {
         alerts.push(`<li><i class="ph ph-check-circle" style="color: #10b981; font-size: 18px; flex-shrink: 0;"></i> <div>Tudo sob controle. Nenhum alerta crítico operacional ativo.</div></li>`);
       }
@@ -195,16 +195,10 @@ async function loadDashboard() {
       alertList.innerHTML = alerts.join("");
     }
 
-    // Load Live Timeline Feed
+    
     loadTimeline();
 
-    // Call settings alarm load if there's any active critical or emergency occurrence
-    const hasEmergency = ocorrenciasCache.some(o => o.status === "Ativa" && o.prioridade === "Crítica");
-    if (hasEmergency && typeof playAlertSound === "function") {
-      // Just a subtle sound at load if there is emergency
-      const sound = localStorage.getItem("medfleet_settings_sound") || "sirene";
-      console.log("Sistema possui ocorrência crítica ativa. Emitindo alerta sonoro operacional.");
-    }
+
   } catch(e) {
     console.error("Erro ao carregar o dashboard:", e);
   }

@@ -27,15 +27,7 @@ function initSettingsPage() {
     btnSave.addEventListener("click", saveUserProfile);
   }
 
-  const btnTest = document.getElementById("btnTestSound");
-  if (btnTest) {
-    btnTest.addEventListener("click", () => {
-      const soundSelect = document.getElementById("settingSoundAlert");
-      if (soundSelect) playAlertSound(soundSelect.value);
-    });
-  }
-
-  ["settingSoundAlert", "settingNotifyPush", "settingNotifyMaint"].forEach(id => {
+  ["settingNotifyPush", "settingNotifyMaint"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("change", saveNotificationSettings);
   });
@@ -145,79 +137,22 @@ function saveUserProfile() {
   showToast("Perfil operacional atualizado com sucesso!", "success");
 }
 
-function playAlertSound(type) {
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContext) return;
-
-  const ctx = new AudioContext();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-
-  if (type === "sirene") {
-    osc.type = "sine";
-    const now = ctx.currentTime;
-    osc.frequency.setValueAtTime(650, now);
-    osc.frequency.linearRampToValueAtTime(950, now + 0.4);
-    osc.frequency.linearRampToValueAtTime(650, now + 0.8);
-    osc.frequency.linearRampToValueAtTime(950, now + 1.2);
-    osc.frequency.linearRampToValueAtTime(650, now + 1.6);
-    
-    gain.gain.setValueAtTime(0.12, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
-    
-    osc.start(now);
-    osc.stop(now + 1.8);
-  } else if (type === "bipe") {
-    osc.type = "square";
-    const now = ctx.currentTime;
-    
-    osc.frequency.setValueAtTime(1400, now);
-    gain.gain.setValueAtTime(0.08, now);
-    gain.gain.setValueAtTime(0.001, now + 0.08);
-    
-    osc.frequency.setValueAtTime(1400, now + 0.18);
-    gain.gain.setValueAtTime(0.08, now + 0.18);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-    
-    osc.start(now);
-    osc.stop(now + 0.35);
-  } else if (type === "suave") {
-    osc.type = "triangle";
-    const now = ctx.currentTime;
-    osc.frequency.setValueAtTime(523.25, now);
-    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.15);
-    
-    gain.gain.setValueAtTime(0.18, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-    
-    osc.start(now);
-    osc.stop(now + 0.5);
-  }
-}
 
 function loadNotificationSettings() {
-  const sound = localStorage.getItem("medfleet_settings_sound") || "sirene";
   const push = localStorage.getItem("medfleet_settings_push") !== "false";
   const maint = localStorage.getItem("medfleet_settings_maint") !== "false";
 
-  const soundSelect = document.getElementById("settingSoundAlert");
   const pushToggle = document.getElementById("settingNotifyPush");
   const maintToggle = document.getElementById("settingNotifyMaint");
 
-  if (soundSelect) soundSelect.value = sound;
   if (pushToggle) pushToggle.checked = push;
   if (maintToggle) maintToggle.checked = maint;
 }
 
 function saveNotificationSettings() {
-  const soundSelect = document.getElementById("settingSoundAlert");
   const pushToggle = document.getElementById("settingNotifyPush");
   const maintToggle = document.getElementById("settingNotifyMaint");
 
-  if (soundSelect) localStorage.setItem("medfleet_settings_sound", soundSelect.value);
   if (pushToggle) localStorage.setItem("medfleet_settings_push", pushToggle.checked);
   if (maintToggle) localStorage.setItem("medfleet_settings_maint", maintToggle.checked);
 }
@@ -273,7 +208,7 @@ function initCacheCleaner() {
   const btnClear = document.getElementById("btnClearCache");
   if (btnClear) {
     btnClear.addEventListener("click", () => {
-      if (confirm("Atenção: Isso redefinirá todas as configurações de perfil, preferências de som, layout compacto e caches locais simulados. Deseja prosseguir?")) {
+      if (confirm("Atenção: Isso redefinirá todas as configurações de perfil, layout compacto e caches locais simulados. Deseja prosseguir?")) {
         localStorage.clear();
         showToast("Todos os dados foram redefinidos. A página será recarregada.", "success");
         setTimeout(() => {
