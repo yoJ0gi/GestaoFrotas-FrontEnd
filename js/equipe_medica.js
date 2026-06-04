@@ -1,24 +1,23 @@
-let selectedEquipeId = null;
+let equipeSelecionadaId = null;
 
-function loadEquipes() {
-  const list = document.getElementById("equipeMedicaList");
-  if (!list) return;
-  list.innerHTML = "";
+function carregarEquipes() {
+  atualizarTodosSelects();
+  const lista = document.getElementById("equipeMedicaList");
+  if (!lista) return;
+  lista.innerHTML = "";
 
   equipesCache.forEach(eq => {
-    const card = document.createElement("div");
-    card.className = "tracking-card";
-    card.dataset.id = eq.id;
-    if (eq.id === selectedEquipeId) card.classList.add("selected");
+    const cartao = document.createElement("div");
+    cartao.className = "tracking-card";
+    cartao.dataset.id = eq.id;
+    cartao.classList.toggle("selected", eq.id === equipeSelecionadaId);
 
-    const motoristasAptosCount = eq.membros.filter(id => {
-      const f = funcionariosCache.find(func => func.id == id);
+    const condutoresAptos = eq.membros.filter(mId => {
+      const f = funcionariosCache.find(func => func.id == mId);
       return f && f.apto_dirigir === "Sim";
     }).length;
 
-    const totalMembros = eq.membros.length;
-
-    card.innerHTML = `
+    cartao.innerHTML = `
       <div class="tc-header">
         <h3 style="font-size: 15px;">${eq.nome}</h3>
         <span class="status-badge badge-route">
@@ -27,45 +26,40 @@ function loadEquipes() {
       </div>
       <div style="font-size: 13px; color: var(--text-light); margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
         <div><i class="ph ph-calendar"></i> ${eq.data}</div>
-        <div><i class="ph ph-users"></i> ${totalMembros} Membros</div>
+        <div><i class="ph ph-users"></i> ${eq.membros.length} Membros</div>
       </div>
       <div style="margin-top: 12px; display: flex; align-items: center; justify-content: space-between;">
-        <span class="status-badge ${motoristasAptosCount > 0 ? 'badge-available' : 'badge-emergency'}">
-          <i class="ph ph-steering-wheel"></i> ${motoristasAptosCount} Condutor(es)
+        <span class="status-badge ${condutoresAptos > 0 ? 'badge-available' : 'badge-emergency'}">
+          <i class="ph ph-steering-wheel"></i> ${condutoresAptos} Condutor(es)
         </span>
       </div>
     `;
 
-    card.onclick = () => selectEquipe(eq.id);
-    list.appendChild(card);
+    cartao.onclick = () => selecionarEquipe(eq.id);
+    lista.appendChild(cartao);
   });
 
-  closeDetails('equipeMedica');
+  fecharDetalhes('equipeMedica');
 }
 
-function selectEquipe(id) {
-  selectedEquipeId = id;
+function selecionarEquipe(id) {
+  equipeSelecionadaId = id;
   const eq = equipesCache.find(e => e.id === id);
   if (!eq) return;
 
-  const cards = document.querySelectorAll("#equipeMedicaList .tracking-card");
-  cards.forEach(card => {
-    if (Number(card.dataset.id) === Number(id)) {
-      card.classList.add("selected");
-    } else {
-      card.classList.remove("selected");
-    }
+  document.querySelectorAll("#equipeMedicaList .tracking-card").forEach(cartao => {
+    cartao.classList.toggle("selected", Number(cartao.dataset.id) === Number(id));
   });
 
-  const el = docId => document.getElementById(docId);
+  const el = idDoc => document.getElementById(idDoc);
   if (el("detailEquipeNome")) el("detailEquipeNome").textContent = eq.nome || 'Sem Nome';
   if (el("detailEquipeData")) el("detailEquipeData").textContent = eq.data || '-';
   if (el("detailEquipeTurno")) el("detailEquipeTurno").textContent = eq.turno || '-';
   if (el("detailEquipeObs")) el("detailEquipeObs").textContent = eq.obs || 'Nenhuma observação cadastrada.';
 
-  const membrosListContainer = el("detailEquipeMembrosList");
-  if (membrosListContainer) {
-    membrosListContainer.innerHTML = "";
+  const containerListaMembros = el("detailEquipeMembrosList");
+  if (containerListaMembros) {
+    containerListaMembros.innerHTML = "";
     eq.membros.forEach(mId => {
       const f = funcionariosCache.find(func => func.id == mId);
       if (f) {
@@ -78,11 +72,13 @@ function selectEquipe(id) {
         item.style.border = "1px solid var(--border)";
         item.style.borderRadius = "10px";
 
-        let cargoBadgeClass = "badge-inactive";
-        if (f.cargo === "Médico") cargoBadgeClass = "badge-available";
-        else if (f.cargo === "Enfermeiro") cargoBadgeClass = "badge-route";
-        else if (f.cargo === "Socorrista") cargoBadgeClass = "badge-maintenance";
-        else if (f.cargo === "Motorista") cargoBadgeClass = "badge-inactive";
+        const badgeCargos = {
+          "Médico": "badge-available",
+          "Enfermeiro": "badge-route",
+          "Socorrista": "badge-maintenance",
+          "Motorista": "badge-inactive"
+        };
+        const classeBadgeCargo = badgeCargos[f.cargo] || "badge-inactive";
 
         item.innerHTML = `
           <div style="display: flex; align-items: center; gap: 10px;">
@@ -94,49 +90,48 @@ function selectEquipe(id) {
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             ${f.apto_dirigir === "Sim" ? '<span class="status-badge badge-available"><i class="ph ph-steering-wheel"></i> Apto a Dirigir</span>' : ''}
-            <span class="status-badge ${cargoBadgeClass}">${f.cargo}</span>
+            <span class="status-badge ${classeBadgeCargo}">${f.cargo}</span>
           </div>
         `;
-        membrosListContainer.appendChild(item);
+        containerListaMembros.appendChild(item);
       }
     });
   }
 
-  const btnEdit = el("btnEditEquipe");
-  if (btnEdit) btnEdit.onclick = () => editEquipe(eq.id);
+  if (el("btnEditEquipe")) el("btnEditEquipe").onclick = () => editarEquipe(eq.id);
+  if (el("btnDeleteEquipe")) {
+    el("btnDeleteEquipe").onclick = () => {
+      if (confirm(`Tem certeza que deseja remover a equipe "${eq.nome}"?`)) {
+        deletarEquipe(eq.id);
+      }
+    };
+  }
 
-  const btnDel = el("btnDeleteEquipe");
-  if (btnDel) btnDel.onclick = () => {
-    if (confirm(`Tem certeza que deseja remover a equipe "${eq.nome}"?`)) {
-      deleteEquipe(eq.id);
-    }
-  };
-
-  showDetails('equipeMedica');
+  mostrarDetalhes('equipeMedica');
 }
 
 document.getElementById("addEquipeBtn").onclick = () => {
   equipeEditandoId = null;
-  resetEquipeForm();
+  limparFormularioEquipe();
   document.getElementById("saveEquipeMedica").innerHTML = '<i class="ph ph-floppy-disk"></i> Salvar Equipe';
   document.getElementById("equipeMedicaModal").classList.remove("hidden");
 };
 
-function resetEquipeForm() {
+function limparFormularioEquipe() {
   document.getElementById("inputEquipeNome").value = "";
   document.getElementById("inputEquipeData").value = "";
   document.getElementById("inputEquipeTurno").value = "Manhã";
-  document.getElementById("inputEquipeMembroBuscar").value = "";
   document.getElementById("inputEquipeObs").value = "";
   membrosSelecionadosIds = [];
-  renderMembrosChips();
+  renderizarChipsMembros();
+  atualizarSelectMembrosEquipe();
   document.getElementById("equipeMedicaModal").classList.add("hidden");
 }
 
-document.getElementById("cancelEquipeMedica").onclick = resetEquipeForm;
-document.getElementById("closeEquipeMedicaModal").onclick = resetEquipeForm;
+document.getElementById("cancelEquipeMedica").onclick = limparFormularioEquipe;
+document.getElementById("closeEquipeMedicaModal").onclick = limparFormularioEquipe;
 
-function renderMembrosChips() {
+function renderizarChipsMembros() {
   const container = document.getElementById("equipeMembrosChipsContainer");
   if (!container) return;
   container.innerHTML = "";
@@ -160,11 +155,10 @@ function renderMembrosChips() {
       chip.style.fontSize = "13px";
       chip.style.color = "var(--text)";
 
-      let isDriver = f.apto_dirigir === "Sim";
-      
+      const eMotorista = f.apto_dirigir === "Sim";
       chip.innerHTML = `
         <span style="font-weight: 500;">${f.nome} (${f.cargo})</span>
-        ${isDriver ? '<i class="ph ph-steering-wheel" title="Apto a dirigir" style="color: var(--status-available);"></i>' : ''}
+        ${eMotorista ? '<i class="ph ph-steering-wheel" title="Apto a dirigir" style="color: var(--status-available);"></i>' : ''}
         <i class="ph ph-x" style="cursor: pointer; color: #ef4444; font-weight: bold;" onclick="removerMembroDeEquipe(${f.id})"></i>
       `;
       container.appendChild(chip);
@@ -174,56 +168,22 @@ function renderMembrosChips() {
 
 window.removerMembroDeEquipe = function(id) {
   membrosSelecionadosIds = membrosSelecionadosIds.filter(mId => mId != id);
-  renderMembrosChips();
+  renderizarChipsMembros();
+  atualizarSelectMembrosEquipe();
 };
 
-function initEquipeAutocomplete() {
-  const input = document.getElementById("inputEquipeMembroBuscar");
-  const sugestoes = document.getElementById("equipeMembroSugestoes");
-  if (!input || !sugestoes) return;
+function inicializarAutocompleteEquipe() {
+  const select = document.getElementById("inputEquipeMembroBuscar");
+  if (!select) return;
 
-  input.addEventListener("input", () => {
-    const termo = input.value.toLowerCase();
-    sugestoes.innerHTML = "";
-
-    if (!termo) {
-      sugestoes.classList.add("hidden");
-      return;
+  select.onchange = (e) => {
+    const valor = e.target.value;
+    if (valor) {
+      membrosSelecionadosIds.push(Number(valor));
+      renderizarChipsMembros();
+      atualizarSelectMembrosEquipe();
     }
-
-    const filtrados = funcionariosCache.filter(f => 
-      !membrosSelecionadosIds.includes(f.id) &&
-      (f.nome.toLowerCase().includes(termo) || f.cargo.toLowerCase().includes(termo))
-    );
-
-    filtrados.forEach(f => {
-      const li = document.createElement("li");
-      li.style.display = "flex";
-      li.style.justifyContent = "space-between";
-      li.style.alignItems = "center";
-      li.innerHTML = `
-        <span>${f.nome} (${f.cargo})</span>
-        ${f.apto_dirigir === "Sim" ? '<span style="font-size: 11px; color: var(--status-available);"><i class="ph ph-steering-wheel"></i> Condutor</span>' : ''}
-      `;
-
-      li.onclick = () => {
-        membrosSelecionadosIds.push(f.id);
-        input.value = "";
-        sugestoes.classList.add("hidden");
-        renderMembrosChips();
-      };
-
-      sugestoes.appendChild(li);
-    });
-
-    sugestoes.classList.remove("hidden");
-  });
-
-  document.addEventListener("click", (e) => {
-    if (e.target !== input && e.target !== sugestoes) {
-      sugestoes.classList.add("hidden");
-    }
-  });
+  };
 }
 
 document.getElementById("saveEquipeMedica").onclick = () => {
@@ -232,9 +192,9 @@ document.getElementById("saveEquipeMedica").onclick = () => {
   const turno = document.getElementById("inputEquipeTurno").value;
   const obs = document.getElementById("inputEquipeObs").value.trim();
 
-  if (!nome) return showToast("Por favor, informe o nome da equipe.", "warning");
-  if (!data) return showToast("Por favor, selecione uma data.", "warning");
-  if (membrosSelecionadosIds.length === 0) return showToast("Por favor, adicione pelo menos 1 membro à equipe.", "warning");
+  if (!nome) return mostrarToast("Por favor, informe o nome da equipe.", "warning");
+  if (!data) return mostrarToast("Por favor, selecione uma data.", "warning");
+  if (membrosSelecionadosIds.length === 0) return mostrarToast("Por favor, adicione pelo menos 1 membro à equipe.", "warning");
 
   const temCondutor = membrosSelecionadosIds.some(id => {
     const f = funcionariosCache.find(func => func.id == id);
@@ -242,12 +202,13 @@ document.getElementById("saveEquipeMedica").onclick = () => {
   });
 
   if (!temCondutor) {
-    return showToast("Atenção: A equipe precisa ter no mínimo 1 pessoa apta a dirigir!", "error");
+    return mostrarToast("Atenção: A equipe precisa ter no mínimo 1 pessoa apta a dirigir!", "error");
   }
 
-  const equipeData = {
+  const dadosEquipe = {
     nome,
     data,
+    turnos: turno, // backward compatibility
     turno,
     obs,
     membros: [...membrosSelecionadosIds]
@@ -255,20 +216,18 @@ document.getElementById("saveEquipeMedica").onclick = () => {
 
   if (equipeEditandoId) {
     const idx = equipesCache.findIndex(e => e.id == equipeEditandoId);
-    if (idx > -1) {
-      equipesCache[idx] = { ...equipesCache[idx], ...equipeData };
-    }
+    if (idx > -1) equipesCache[idx] = { ...equipesCache[idx], ...dadosEquipe };
   } else {
-    const newId = equipesCache.length > 0 ? Math.max(...equipesCache.map(e => e.id)) + 1 : 1;
-    equipesCache.push({ id: newId, ...equipeData });
-    selectedEquipeId = newId;
+    const novoId = equipesCache.length > 0 ? Math.max(...equipesCache.map(e => e.id)) + 1 : 1;
+    equipesCache.push({ id: novoId, ...dadosEquipe });
+    equipeSelecionadaId = novoId;
   }
 
-  resetEquipeForm();
-  loadEquipes();
+  limparFormularioEquipe();
+  carregarEquipes();
 };
 
-function editEquipe(id) {
+function editarEquipe(id) {
   const eq = equipesCache.find(e => e.id == id);
   if (!eq) return;
 
@@ -278,15 +237,16 @@ function editEquipe(id) {
   document.getElementById("inputEquipeObs").value = eq.obs || "";
 
   membrosSelecionadosIds = [...eq.membros];
-  renderMembrosChips();
+  renderizarChipsMembros();
+  atualizarSelectMembrosEquipe();
 
   equipeEditandoId = id;
   document.getElementById("saveEquipeMedica").innerHTML = '<i class="ph ph-pencil-simple"></i> Atualizar Equipe';
   document.getElementById("equipeMedicaModal").classList.remove("hidden");
 }
 
-function deleteEquipe(id) {
+function deletarEquipe(id) {
   equipesCache = equipesCache.filter(e => e.id != id);
-  if (selectedEquipeId == id) selectedEquipeId = null;
-  loadEquipes();
+  if (equipeSelecionadaId == id) equipeSelecionadaId = null;
+  carregarEquipes();
 }

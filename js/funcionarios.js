@@ -1,15 +1,15 @@
-let usingMockFuncionarios = false;
-let selectedFuncionarioId = null;
+let usandoMockFuncionarios = false;
+let funcionarioSelecionadoId = null;
 
-async function loadFuncionariosCache() {
-  if (usingMockFuncionarios) return;
+async function carregarCacheFuncionarios() {
+  if (usandoMockFuncionarios) return;
   try {
-    const res = await fetch(API + "/motoristas");
-    if (!res.ok) throw new Error("API failed");
-    const motoristas = await res.json();
+    const resposta = await fazerRequisicao("/motoristas");
+    if (!resposta.ok) throw new Error("API falhou");
+    const motoristas = await resposta.json();
     
-    const nonMotoristas = funcionariosCache.filter(f => f.cargo !== "Motorista");
-    const fetchedMotoristas = motoristas.map(m => ({
+    const naoMotoristas = funcionariosCache.filter(f => f.cargo !== "Motorista");
+    const motoristasMapeados = motoristas.map(m => ({
       id: m.id,
       nome: m.nome,
       cargo: "Motorista",
@@ -24,49 +24,48 @@ async function loadFuncionariosCache() {
       status: m.status || "Disponível"
     }));
     
-    funcionariosCache = [...fetchedMotoristas, ...nonMotoristas];
-  } catch (err) {
-    console.warn("Backend offline ou erro, usando mock data unificado");
-    usingMockFuncionarios = true;
+    funcionariosCache = [...motoristasMapeados, ...naoMotoristas];
+  } catch (erro) {
+    console.warn("Backend offline ou com erro, usando dados mockados");
+    usandoMockFuncionarios = true;
   }
 }
 
-async function loadFuncionarios(filter = null) {
-  await loadFuncionariosCache();
+async function carregarFuncionarios(filtro = null) {
+  await carregarCacheFuncionarios();
+  atualizarTodosSelects();
 
-  const titleEl = document.getElementById("funcionariosPageTitle");
-  const subtitleEl = document.getElementById("funcionariosPageSubtitle");
-  if (titleEl) {
-    titleEl.textContent = filter ? filter + "s" : "Funcionários";
-  }
-  if (subtitleEl) {
-    subtitleEl.textContent = filter 
-      ? `Listando todos os ${filter.toLowerCase()}s vinculados à frota hospitalar` 
+  const tituloEl = document.getElementById("funcionariosPageTitle");
+  const subtituloEl = document.getElementById("funcionariosPageSubtitle");
+  if (tituloEl) tituloEl.textContent = filtro ? filtro + "s" : "Funcionários";
+  if (subtituloEl) {
+    subtituloEl.textContent = filtro 
+      ? `Listando todos os ${filtro.toLowerCase()}s vinculados à frota hospitalar` 
       : "Todos os profissionais vinculados à frota hospitalar";
   }
 
-  const list = document.getElementById("funcionariosList");
-  if (list) list.innerHTML = "";
+  const lista = document.getElementById("funcionariosList");
+  if (lista) lista.innerHTML = "";
 
-  const filtered = filter 
-    ? funcionariosCache.filter(f => f.cargo === filter)
+  const filtrados = filtro 
+    ? funcionariosCache.filter(f => f.cargo === filtro)
     : funcionariosCache;
 
-  filtered.forEach(f => {
-    const card = document.createElement("div");
-    card.className = "tracking-card";
-    card.dataset.id = f.id;
-    if (f.id === selectedFuncionarioId) card.classList.add("selected");
+  filtrados.forEach(f => {
+    const cartao = document.createElement("div");
+    cartao.className = "tracking-card";
+    cartao.dataset.id = f.id;
+    if (f.id === funcionarioSelecionadoId) cartao.classList.add("selected");
 
-    let statusBadge = `<span class="status-badge badge-available"><i class="ph ph-check-circle"></i> Disponível</span>`;
-    if (f.status === "Em Rota") {
-      statusBadge = `<span class="status-badge badge-route"><i class="ph ph-navigation-arrow"></i> Em Rota</span>`;
-    }
+    const emRota = f.status === "Em Rota";
+    const badgeStatus = emRota
+      ? `<span class="status-badge badge-route"><i class="ph ph-navigation-arrow"></i> Em Rota</span>`
+      : `<span class="status-badge badge-available"><i class="ph ph-check-circle"></i> Disponível</span>`;
 
-    card.innerHTML = `
+    cartao.innerHTML = `
       <div class="tc-header">
         <h3>${f.nome}</h3>
-        ${statusBadge}
+        ${badgeStatus}
       </div>
       <div style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">
         ${f.cargo} ${f.registro ? '| ' + f.registro : ''}
@@ -76,39 +75,32 @@ async function loadFuncionarios(filter = null) {
       </div>
     `;
 
-    card.onclick = () => selectFuncionario(f.id);
-    if (list) list.appendChild(card);
+    cartao.onclick = () => selecionarFuncionario(f.id);
+    if (lista) lista.appendChild(cartao);
   });
 
-  closeDetails('funcionarios');
+  fecharDetalhes('funcionarios');
 }
 
-function selectFuncionario(id) {
-  selectedFuncionarioId = id;
+function selecionarFuncionario(id) {
+  funcionarioSelecionadoId = id;
   const f = funcionariosCache.find(func => func.id == id);
   if (!f) return;
 
-  const cards = document.querySelectorAll("#funcionariosList .tracking-card");
-  cards.forEach(card => {
-    if (card.dataset.id == id) {
-      card.classList.add("selected");
-    } else {
-      card.classList.remove("selected");
-    }
+  document.querySelectorAll("#funcionariosList .tracking-card").forEach(cartao => {
+    cartao.classList.toggle("selected", cartao.dataset.id == id);
   });
 
   const el = docId => document.getElementById(docId);
-  
   if (el("detailFuncNome")) el("detailFuncNome").textContent = f.nome || 'Sem Nome';
+  
   if (el("detailFuncStatus")) {
     const statusEl = el("detailFuncStatus");
-    if (f.status === "Em Rota") {
-      statusEl.className = "status-badge badge-route";
-      statusEl.innerHTML = `<i class="ph ph-navigation-arrow"></i> Em Rota`;
-    } else {
-      statusEl.className = "status-badge badge-available";
-      statusEl.innerHTML = `<i class="ph ph-check-circle"></i> Disponível`;
-    }
+    const emRota = f.status === "Em Rota";
+    statusEl.className = `status-badge ${emRota ? "badge-route" : "badge-available"}`;
+    statusEl.innerHTML = emRota 
+      ? `<i class="ph ph-navigation-arrow"></i> Em Rota` 
+      : `<i class="ph ph-check-circle"></i> Disponível`;
   }
 
   if (el("detailFuncCargo")) el("detailFuncCargo").textContent = f.cargo || '-';
@@ -122,246 +114,224 @@ function selectFuncionario(id) {
   const validadeCnhBox = el("detailFuncValidadeCnhBox");
   const registroBox = el("detailFuncRegistroBox");
 
-  if (f.apto_dirigir === "Sim") {
-    if (cnhBox) cnhBox.style.display = "block";
-    if (validadeCnhBox) validadeCnhBox.style.display = "block";
+  const apto = f.apto_dirigir === "Sim";
+  if (cnhBox) cnhBox.style.display = apto ? "block" : "none";
+  if (validadeCnhBox) validadeCnhBox.style.display = apto ? "block" : "none";
 
+  if (apto) {
     if (el("detailFuncCnh")) el("detailFuncCnh").textContent = f.cnh || '-';
     if (el("detailFuncValidadeCnh")) {
       if (f.validade_cnh) {
-        const parts = f.validade_cnh.split("-");
-        el("detailFuncValidadeCnh").textContent = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : f.validade_cnh;
+        const partes = f.validade_cnh.split("-");
+        el("detailFuncValidadeCnh").textContent = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : f.validade_cnh;
       } else {
         el("detailFuncValidadeCnh").textContent = '-';
       }
     }
-  } else {
-    if (cnhBox) cnhBox.style.display = "none";
-    if (validadeCnhBox) validadeCnhBox.style.display = "none";
   }
 
-  if (f.cargo === "Motorista") {
-    if (registroBox) registroBox.style.display = "none";
-  } else {
-    if (registroBox) registroBox.style.display = "block";
-    if (el("detailFuncRegistro")) el("detailFuncRegistro").textContent = f.registro || '-';
+  const eMotorista = f.cargo === "Motorista";
+  if (registroBox) registroBox.style.display = eMotorista ? "none" : "block";
+  if (!eMotorista && el("detailFuncRegistro")) el("detailFuncRegistro").textContent = f.registro || '-';
+
+  if (el("btnEditFuncionario")) el("btnEditFuncionario").onclick = () => editarFuncionario(f.id);
+  if (el("btnDeleteFuncionario")) {
+    el("btnDeleteFuncionario").onclick = () => {
+      if (confirm(`Tem certeza que deseja remover o funcionário ${f.nome}?`)) {
+        deletarFuncionario(f.id);
+      }
+    };
   }
 
-  const btnEdit = el("btnEditFuncionario");
-  if (btnEdit) btnEdit.onclick = () => editFuncionario(f.id);
-
-  const btnDel = el("btnDeleteFuncionario");
-  if (btnDel) btnDel.onclick = () => {
-    if (confirm(`Tem certeza que deseja remover o funcionário ${f.nome}?`)) {
-      deleteFuncionario(f.id);
-    }
-  };
-
-  showDetails('funcionarios');
+  mostrarDetalhes('funcionarios');
 }
 
-const addFuncBtn = document.getElementById("addFuncionarioBtn");
-if (addFuncBtn) {
-  addFuncBtn.onclick = () => {
+const btnAddFunc = document.getElementById("addFuncionarioBtn");
+if (btnAddFunc) {
+  btnAddFunc.onclick = () => {
     funcionarioEditandoId = null;
-    resetFuncionarioForm();
+    limparFormularioFuncionario();
     document.getElementById("saveFuncionario").innerHTML = '<i class="ph ph-floppy-disk"></i> Salvar Funcionário';
     document.getElementById("funcionarioModal").classList.remove("hidden");
   };
 }
 
-function resetFuncionarioForm() {
+function limparFormularioFuncionario() {
   ["inputFuncNome", "inputFuncCargo", "inputFuncCpf", "inputFuncIdade", "inputFuncTelefone", "inputFuncEmail", "inputFuncCnh", "inputFuncValidadeCnh", "inputFuncRegistro"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = "";
   });
   
-  const aptoSelect = document.getElementById("inputFuncApto");
-  if (aptoSelect) {
-    aptoSelect.value = "Não";
-    aptoSelect.disabled = false;
+  const seletorApto = document.getElementById("inputFuncApto");
+  if (seletorApto) {
+    seletorApto.value = "Não";
+    seletorApto.disabled = false;
   }
 
-  updateModalConditionalFields("", "Não");
+  atualizarCamposCondicionaisModal("", "Não");
   document.getElementById("funcionarioModal").classList.add("hidden");
 }
 
-const cancelFuncBtn = document.getElementById("cancelFuncionario");
-if (cancelFuncBtn) cancelFuncBtn.onclick = resetFuncionarioForm;
+const btnCancelarFunc = document.getElementById("cancelFuncionario");
+if (btnCancelarFunc) btnCancelarFunc.onclick = limparFormularioFuncionario;
 
-const closeFuncModalBtn = document.getElementById("closeFuncionarioModal");
-if (closeFuncModalBtn) closeFuncModalBtn.onclick = resetFuncionarioForm;
+const btnFecharModalFunc = document.getElementById("closeFuncionarioModal");
+if (btnFecharModalFunc) btnFecharModalFunc.onclick = limparFormularioFuncionario;
 
-function updateModalConditionalFields(cargo, aptoDirigir) {
-  const fieldCnh = document.getElementById("fieldCnh");
-  const fieldValidadeCnh = document.getElementById("fieldValidadeCnh");
-  const fieldRegistro = document.getElementById("fieldRegistro");
-  const aptoSelect = document.getElementById("inputFuncApto");
+function atualizarCamposCondicionaisModal(cargo, aptoDirigir) {
+  const campoCnh = document.getElementById("fieldCnh");
+  const campoValidadeCnh = document.getElementById("fieldValidadeCnh");
+  const campoRegistro = document.getElementById("fieldRegistro");
+  const seletorApto = document.getElementById("inputFuncApto");
 
-  let currentApto = aptoDirigir;
+  let aptoAtual = aptoDirigir;
 
   if (cargo === "Motorista") {
-    if (aptoSelect) {
-      aptoSelect.value = "Sim";
-      aptoSelect.disabled = true;
+    if (seletorApto) {
+      seletorApto.value = "Sim";
+      seletorApto.disabled = true;
     }
-    currentApto = "Sim";
-  } else {
-    if (aptoSelect) {
-      aptoSelect.disabled = false;
-    }
+    aptoAtual = "Sim";
+  } else if (seletorApto) {
+    seletorApto.disabled = false;
   }
 
-  if (currentApto === "Sim") {
-    if (fieldCnh) fieldCnh.classList.remove("hidden");
-    if (fieldValidadeCnh) fieldValidadeCnh.classList.remove("hidden");
-  } else {
-    if (fieldCnh) fieldCnh.classList.add("hidden");
-    if (fieldValidadeCnh) fieldValidadeCnh.classList.add("hidden");
-  }
+  const eApto = aptoAtual === "Sim";
+  if (campoCnh) campoCnh.classList.toggle("hidden", !eApto);
+  if (campoValidadeCnh) campoValidadeCnh.classList.toggle("hidden", !eApto);
 
-  if (cargo === "Médico" || cargo === "Enfermeiro" || cargo === "Socorrista") {
-    if (fieldRegistro) fieldRegistro.classList.remove("hidden");
-  } else {
-    if (fieldRegistro) fieldRegistro.classList.add("hidden");
-  }
+  const precisaRegistro = ["Médico", "Enfermeiro", "Socorrista"].includes(cargo);
+  if (campoRegistro) campoRegistro.classList.toggle("hidden", !precisaRegistro);
 }
 
-const cargoSelect = document.getElementById("inputFuncCargo");
-const aptoSelect = document.getElementById("inputFuncApto");
+const seletorCargo = document.getElementById("inputFuncCargo");
+const seletorApto = document.getElementById("inputFuncApto");
 
-if (cargoSelect) {
-  cargoSelect.addEventListener("change", (e) => {
-    const aptoVal = aptoSelect ? aptoSelect.value : "Não";
-    updateModalConditionalFields(e.target.value, aptoVal);
-  });
+if (seletorCargo) {
+  seletorCargo.onchange = (e) => {
+    const aptoVal = seletorApto ? seletorApto.value : "Não";
+    atualizarCamposCondicionaisModal(e.target.value, aptoVal);
+  };
 }
 
-if (aptoSelect) {
-  aptoSelect.addEventListener("change", (e) => {
-    const cargoVal = cargoSelect ? cargoSelect.value : "";
-    updateModalConditionalFields(cargoVal, e.target.value);
-  });
+if (seletorApto) {
+  seletorApto.onchange = (e) => {
+    const cargoVal = seletorCargo ? seletorCargo.value : "";
+    atualizarCamposCondicionaisModal(cargoVal, e.target.value);
+  };
 }
 
-const saveFuncBtn = document.getElementById("saveFuncionario");
-if (saveFuncBtn) {
-  saveFuncBtn.onclick = async () => {
-    const cargo = inputValue("inputFuncCargo");
-    const apto = cargo === "Motorista" ? "Sim" : inputValue("inputFuncApto");
-    const data = {
-      nome: inputValue("inputFuncNome"),
+const btnSalvarFunc = document.getElementById("saveFuncionario");
+if (btnSalvarFunc) {
+  btnSalvarFunc.onclick = async () => {
+    const cargo = obterValorInput("inputFuncCargo");
+    const apto = cargo === "Motorista" ? "Sim" : obterValorInput("inputFuncApto");
+    const dados = {
+      nome: obterValorInput("inputFuncNome"),
       cargo: cargo,
-      cpf: inputValue("inputFuncCpf"),
-      idade: inputValue("inputFuncIdade"),
-      telefone: inputValue("inputFuncTelefone"),
-      email: inputValue("inputFuncEmail"),
+      cpf: obterValorInput("inputFuncCpf"),
+      idade: obterValorInput("inputFuncIdade"),
+      telefone: obterValorInput("inputFuncTelefone"),
+      email: obterValorInput("inputFuncEmail"),
       apto_dirigir: apto,
-      cnh: apto === "Sim" ? inputValue("inputFuncCnh") : "",
-      validade_cnh: apto === "Sim" ? inputValue("inputFuncValidadeCnh") : "",
-      registro: cargo !== "Motorista" ? inputValue("inputFuncRegistro") : "",
+      cnh: apto === "Sim" ? obterValorInput("inputFuncCnh") : "",
+      validade_cnh: apto === "Sim" ? obterValorInput("inputFuncValidadeCnh") : "",
+      registro: cargo !== "Motorista" ? obterValorInput("inputFuncRegistro") : "",
       status: "Disponível"
     };
 
     if (cargo === "Motorista") {
-      const method = funcionarioEditandoId && typeof funcionarioEditandoId === 'number' ? "PUT" : "POST";
-      const url = funcionarioEditandoId && typeof funcionarioEditandoId === 'number' ? `${API}/motoristas/${funcionarioEditandoId}` : `${API}/motoristas`;
+      const eEdicao = funcionarioEditandoId && typeof funcionarioEditandoId === 'number';
+      const caminho = eEdicao ? `/motoristas/${funcionarioEditandoId}` : `/motoristas`;
       
       try {
-        const res = await fetch(url, {
-          method,
+        const resposta = await fazerRequisicao(caminho, {
+          method: eEdicao ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            nome: data.nome,
-            cpf: data.cpf,
-            telefone: data.telefone,
-            idade: data.idade,
-            cnh: data.cnh,
-            validade_cnh: data.validade_cnh,
-            email: data.email
+            nome: dados.nome,
+            cpf: dados.cpf,
+            telefone: dados.telefone,
+            idade: dados.idade,
+            cnh: dados.cnh,
+            validade_cnh: dados.validade_cnh,
+            email: dados.email
           })
         });
-        if (!res.ok) throw new Error("API Error");
-        usingMockFuncionarios = false;
-      } catch (err) {
-        saveFuncionarioMock(data);
+        if (!resposta.ok) throw new Error("Erro na API");
+        usandoMockFuncionarios = false;
+      } catch (erro) {
+        salvarFuncionarioMock(dados);
       }
     } else {
-      saveFuncionarioMock(data);
+      salvarFuncionarioMock(dados);
     }
 
-    resetFuncionarioForm();
-    await loadFuncionarios(currentFuncionarioFilter);
+    limparFormularioFuncionario();
+    await carregarFuncionarios(currentFuncionarioFilter);
   };
 }
 
-function saveFuncionarioMock(data) {
+function salvarFuncionarioMock(dados) {
   if (funcionarioEditandoId) {
     const idx = funcionariosCache.findIndex(f => f.id == funcionarioEditandoId);
-    if (idx > -1) {
-      funcionariosCache[idx] = { ...funcionariosCache[idx], ...data };
-    }
+    if (idx > -1) funcionariosCache[idx] = { ...funcionariosCache[idx], ...dados };
   } else {
-    const numericIds = funcionariosCache.map(f => Number(f.id)).filter(n => !isNaN(n));
-    const newId = numericIds.length > 0 ? Math.max(...numericIds) + 1 : 1;
-    funcionariosCache.push({ id: newId, ...data });
-    selectedFuncionarioId = newId;
+    const idsNumericos = funcionariosCache.map(f => Number(f.id)).filter(n => !isNaN(n));
+    const novoId = idsNumericos.length > 0 ? Math.max(...idsNumericos) + 1 : 1;
+    funcionariosCache.push({ id: novoId, ...dados });
+    funcionarioSelecionadoId = novoId;
   }
 }
 
-function editFuncionario(id) {
+function editarFuncionario(id) {
   const f = funcionariosCache.find(func => func.id == id);
   if (!f) return;
 
-  document.getElementById("inputFuncNome").value = f.nome || "";
-  document.getElementById("inputFuncCargo").value = f.cargo || "";
-  document.getElementById("inputFuncCpf").value = f.cpf || "";
-  document.getElementById("inputFuncIdade").value = f.idade || "";
-  document.getElementById("inputFuncTelefone").value = f.telefone || "";
-  document.getElementById("inputFuncEmail").value = f.email || "";
+  const campoVal = (idCampo, valor) => {
+    const el = document.getElementById(idCampo);
+    if (el) el.value = valor || "";
+  };
 
-  const aptoSelect = document.getElementById("inputFuncApto");
+  campoVal("inputFuncNome", f.nome);
+  campoVal("inputFuncCargo", f.cargo);
+  campoVal("inputFuncCpf", f.cpf);
+  campoVal("inputFuncIdade", f.idade);
+  campoVal("inputFuncTelefone", f.telefone);
+  campoVal("inputFuncEmail", f.email);
+
+  const seletorApto = document.getElementById("inputFuncApto");
   const aptoVal = f.apto_dirigir || "Não";
-  if (aptoSelect) aptoSelect.value = aptoVal;
+  if (seletorApto) seletorApto.value = aptoVal;
 
-  updateModalConditionalFields(f.cargo, aptoVal);
+  atualizarCamposCondicionaisModal(f.cargo, aptoVal);
 
-  if (aptoVal === "Sim") {
-    document.getElementById("inputFuncCnh").value = f.cnh || "";
-    document.getElementById("inputFuncValidadeCnh").value = f.validade_cnh || "";
-  } else {
-    document.getElementById("inputFuncCnh").value = "";
-    document.getElementById("inputFuncValidadeCnh").value = "";
-  }
-
-  if (f.cargo !== "Motorista") {
-    document.getElementById("inputFuncRegistro").value = f.registro || "";
-  } else {
-    document.getElementById("inputFuncRegistro").value = "";
-  }
+  campoVal("inputFuncCnh", aptoVal === "Sim" ? f.cnh : "");
+  campoVal("inputFuncValidadeCnh", aptoVal === "Sim" ? f.validade_cnh : "");
+  campoVal("inputFuncRegistro", f.cargo !== "Motorista" ? f.registro : "");
 
   funcionarioEditandoId = id;
   document.getElementById("saveFuncionario").innerHTML = '<i class="ph ph-pencil-simple"></i> Atualizar Funcionário';
   document.getElementById("funcionarioModal").classList.remove("hidden");
 }
 
-async function deleteFuncionario(id) {
+async function deletarFuncionario(id) {
   const f = funcionariosCache.find(func => func.id == id);
   if (!f) return;
 
   if (f.cargo === "Motorista" && typeof id === 'number') {
     try {
-      const res = await fetch(`${API}/motoristas/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("API Error");
-      usingMockFuncionarios = false;
-    } catch (e) {
+      const resposta = await fazerRequisicao(`/motoristas/${id}`, { method: "DELETE" });
+      if (!resposta.ok) throw new Error("Erro na API");
+      usandoMockFuncionarios = false;
+    } catch (erro) {
       funcionariosCache = funcionariosCache.filter(func => func.id != id);
-      if (selectedFuncionarioId == id) selectedFuncionarioId = null;
+      if (funcionarioSelecionadoId == id) funcionarioSelecionadoId = null;
     }
   } else {
     funcionariosCache = funcionariosCache.filter(func => func.id != id);
-    if (selectedFuncionarioId == id) selectedFuncionarioId = null;
+    if (funcionarioSelecionadoId == id) funcionarioSelecionadoId = null;
   }
   
-  await loadFuncionarios(currentFuncionarioFilter);
+  await carregarFuncionarios(currentFuncionarioFilter);
 }

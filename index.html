@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="css/funcionarios.css">
   <link rel="stylesheet" href="css/ocorrencias.css">
   <link rel="stylesheet" href="css/equipe_medica.css">
-  <link rel="stylesheet" href="css/configuracoes.css">
+
   <link rel="stylesheet" href="css/modals.css">
 </head>
 
@@ -56,10 +56,7 @@
               <span class="toggle-slider"></span>
             </label>
           </div>
-          <a href="#" class="sidebar-bottom-item" id="settingsLink">
-            <i class="ph ph-gear"></i>
-            <span>Configurações</span>
-          </a>
+
           <a href="#" class="sidebar-bottom-item" id="logoutLink">
             <i class="ph ph-sign-out"></i>
             <span>Logout</span>
@@ -77,23 +74,9 @@
           <input type="text" placeholder="Buscar..." id="globalSearch">
         </div>
         <div class="topbar-right">
-          <div class="notification-wrapper" style="position: relative;">
-            <button class="topbar-icon-btn" id="notificationBtn" title="Notificações">
-              <i class="ph ph-bell"></i>
-              <span class="notification-dot"></span>
-            </button>
-            <div class="notification-dropdown hidden" id="notificationDropdown">
-              <div class="dropdown-header">
-                <h3>Central de Alertas</h3>
-                <button id="btnMarkAllRead" class="btn-text">Marcar todas como lidas</button>
-              </div>
-              <ul class="dropdown-list" id="dropdownNotificationList">
-                
-              </ul>
-            </div>
-          </div>
-          <div class="user-wrapper" style="position: relative;">
-            <div class="topbar-user" id="userProfileBtn">
+
+          <div class="user-wrapper">
+            <div class="topbar-user">
               <div class="topbar-avatar">
                 <i class="ph ph-user"></i>
               </div>
@@ -101,31 +84,6 @@
                 <span class="topbar-user-name">Admin</span>
                 <span class="topbar-user-role">Administrador</span>
               </div>
-            </div>
-            <div class="profile-dropdown hidden" id="profileDropdown">
-              <div class="profile-dropdown-header">
-                <div class="dropdown-avatar">
-                  <i class="ph ph-user"></i>
-                </div>
-                <div class="dropdown-user-info">
-                  <h4 class="dropdown-name" id="dropdownProfileName">Admin</h4>
-                  <p class="dropdown-role">Administrador</p>
-                </div>
-              </div>
-              <ul class="profile-dropdown-list">
-                <li onclick="showPage('settingsPage'); closeProfileDropdown();">
-                  <i class="ph ph-gear"></i>
-                  <span>Configurações da Conta</span>
-                </li>
-                <li onclick="document.getElementById('themeToggleSwitch').click(); closeProfileDropdown();">
-                  <i class="ph ph-moon"></i>
-                  <span>Alternar Tema</span>
-                </li>
-                <li class="logout-item" id="dropdownLogoutBtn">
-                  <i class="ph ph-sign-out"></i>
-                  <span style="font-weight: 600;">Sair da Conta</span>
-                </li>
-              </ul>
             </div>
           </div>
         </div>
@@ -151,17 +109,10 @@
                 <h2 id="totalOcorrencias">0</h2>
               </div>
             </div>
-            <div class="progress-container">
-              <svg class="progress-ring" width="56" height="56">
-                <defs>
-                  <linearGradient id="gradient-red" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#ef4444" />
-                    <stop offset="100%" stop-color="#b91c1c" />
-                  </linearGradient>
-                </defs>
-                <circle class="progress-ring-bg" cx="28" cy="28" r="22" stroke-width="4" fill="transparent" />
-                <circle class="progress-ring-circle" id="progressOcorrencias" cx="28" cy="28" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" stroke-width="4" fill="transparent" stroke="url(#gradient-red)" stroke-linecap="round" />
-              </svg>
+            <div class="progress-bar-container">
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill fill-red" id="progressOcorrencias"></div>
+              </div>
               <div class="progress-text" id="progressTextOcorrencias">0%</div>
             </div>
           </div>
@@ -177,17 +128,10 @@
                 <h2 id="viaturasRota">0</h2>
               </div>
             </div>
-            <div class="progress-container">
-              <svg class="progress-ring" width="56" height="56">
-                <defs>
-                  <linearGradient id="gradient-blue" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#3b82f6" />
-                    <stop offset="100%" stop-color="#1d4ed8" />
-                  </linearGradient>
-                </defs>
-                <circle class="progress-ring-bg" cx="28" cy="28" r="22" stroke-width="4" fill="transparent" />
-                <circle class="progress-ring-circle" id="progressRota" cx="28" cy="28" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" stroke-width="4" fill="transparent" stroke="url(#gradient-blue)" stroke-linecap="round" />
-              </svg>
+            <div class="progress-bar-container">
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill fill-blue" id="progressRota"></div>
+              </div>
               <div class="progress-text" id="progressTextRota">0%</div>
             </div>
           </div>
@@ -203,17 +147,10 @@
                 <h2 id="equipeDisponivel">0</h2>
               </div>
             </div>
-            <div class="progress-container">
-              <svg class="progress-ring" width="56" height="56">
-                <defs>
-                  <linearGradient id="gradient-green" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#10b981" />
-                    <stop offset="100%" stop-color="#047857" />
-                  </linearGradient>
-                </defs>
-                <circle class="progress-ring-bg" cx="28" cy="28" r="22" stroke-width="4" fill="transparent" />
-                <circle class="progress-ring-circle" id="progressEquipe" cx="28" cy="28" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" stroke-width="4" fill="transparent" stroke="url(#gradient-green)" stroke-linecap="round" />
-              </svg>
+            <div class="progress-bar-container">
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill fill-green" id="progressEquipe"></div>
+              </div>
               <div class="progress-text" id="progressTextEquipe">0%</div>
             </div>
           </div>
@@ -229,17 +166,10 @@
                 <h2 id="totalViaturas">0</h2>
               </div>
             </div>
-            <div class="progress-container">
-              <svg class="progress-ring" width="56" height="56">
-                <defs>
-                  <linearGradient id="gradient-yellow" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#f59e0b" />
-                    <stop offset="100%" stop-color="#b45309" />
-                  </linearGradient>
-                </defs>
-                <circle class="progress-ring-bg" cx="28" cy="28" r="22" stroke-width="4" fill="transparent" />
-                <circle class="progress-ring-circle" id="progressFrota" cx="28" cy="28" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" stroke-width="4" fill="transparent" stroke="url(#gradient-yellow)" stroke-linecap="round" />
-              </svg>
+            <div class="progress-bar-container">
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill fill-yellow" id="progressFrota"></div>
+              </div>
               <div class="progress-text" id="progressTextFrota">0%</div>
             </div>
           </div>
@@ -299,7 +229,7 @@
         
         <div class="vehicle-details-panel hidden" id="veiculosDetail">
           <div class="details-top-bar">
-            <button class="close-details-btn" onclick="closeDetails('veiculos')">
+            <button class="close-details-btn" onclick="fecharDetalhes('veiculos')">
               <i class="ph ph-arrow-left"></i> Voltar para lista
             </button>
           </div>
@@ -404,10 +334,9 @@
 
               <div class="form-group full-width">
                 <label>Motorista Responsável</label>
-                <div class="autocomplete-container">
-                  <input id="inputMotorista" placeholder="Buscar motorista cadastrado..." autocomplete="off" />
-                  <ul id="motoristaSugestoes" class="sugestoes hidden"></ul>
-                </div>
+                <select id="inputMotorista">
+                  <option value="">Selecione o motorista responsável...</option>
+                </select>
               </div>
             </div>
 
@@ -439,7 +368,7 @@
         
         <div class="vehicle-details-panel hidden" id="funcionariosDetail">
           <div class="details-top-bar">
-            <button class="close-details-btn" onclick="closeDetails('funcionarios')">
+            <button class="close-details-btn" onclick="fecharDetalhes('funcionarios')">
               <i class="ph ph-arrow-left"></i> Voltar para lista
             </button>
           </div>
@@ -621,7 +550,7 @@
         
         <div class="vehicle-details-panel hidden" id="ocorrenciasDetail">
           <div class="details-top-bar">
-            <button class="close-details-btn" onclick="closeDetails('ocorrencias')">
+            <button class="close-details-btn" onclick="fecharDetalhes('ocorrencias')">
               <i class="ph ph-arrow-left"></i> Voltar para lista
             </button>
           </div>
@@ -728,18 +657,16 @@
 
               <div class="form-group">
                 <label>Viatura Despachada (Opcional)</label>
-                <div class="autocomplete-container">
-                  <input id="inputOcorrenciaVeiculo" placeholder="Buscar viatura..." autocomplete="off" />
-                  <ul id="ocorrenciaVeiculoSugestoes" class="sugestoes hidden"></ul>
-                </div>
+                <select id="inputOcorrenciaVeiculo">
+                  <option value="">Selecione a viatura...</option>
+                </select>
               </div>
 
               <div class="form-group full-width">
                 <label>Equipe / Motorista (Opcional)</label>
-                <div class="autocomplete-container">
-                  <input id="inputOcorrenciaEquipe" placeholder="Buscar profissional..." autocomplete="off" />
-                  <ul id="ocorrenciaEquipeSugestoes" class="sugestoes hidden"></ul>
-                </div>
+                <select id="inputOcorrenciaEquipe">
+                  <option value="">Selecione a equipe ou profissional...</option>
+                </select>
               </div>
 
               <div class="form-group full-width">
@@ -771,10 +698,9 @@
           <h3>Cadastrar Manutenção</h3>
 
           <label>Veículo</label>
-          <div class="autocomplete-container">
-            <input id="inputVeiculoManut" placeholder="Buscar veículo..." autocomplete="off" />
-            <ul id="veiculoSugestoesManut" class="sugestoes hidden"></ul>
-          </div>
+          <select id="inputVeiculoManut">
+            <option value="">Selecione a viatura...</option>
+          </select>
 
           <label>Data</label>
           <input id="inputDataManut" type="date" placeholder="Selecione a data" />
@@ -802,10 +728,9 @@
           <h3>Cadastrar Abastecimento</h3>
 
           <label>Veículo</label>
-          <div class="autocomplete-container">
-            <input id="inputVeiculoAbast" placeholder="Buscar veículo..." autocomplete="off" />
-            <ul id="veiculoSugestoesAbast" class="sugestoes hidden"></ul>
-          </div>
+          <select id="inputVeiculoAbast">
+            <option value="">Selecione a viatura...</option>
+          </select>
 
           <label>Data</label>
           <input id="inputDataAbast" type="date" placeholder="Selecione a data" />
@@ -854,7 +779,7 @@
           
           <div class="vehicle-details-panel hidden" id="equipeMedicaDetail">
             <div class="details-top-bar">
-              <button class="close-details-btn" onclick="closeDetails('equipeMedica')">
+              <button class="close-details-btn" onclick="fecharDetalhes('equipeMedica')">
                 <i class="ph ph-arrow-left"></i> Voltar para lista
               </button>
             </div>
@@ -935,10 +860,9 @@
               
               <div class="form-group full-width">
                 <label>Adicionar Membro à Equipe</label>
-                <div class="autocomplete-container">
-                  <input id="inputEquipeMembroBuscar" placeholder="Buscar profissional por nome..." autocomplete="off" />
-                  <ul id="equipeMembroSugestoes" class="sugestoes hidden"></ul>
-                </div>
+                <select id="inputEquipeMembroBuscar">
+                  <option value="">Selecione um profissional para adicionar...</option>
+                </select>
               </div>
 
               
@@ -964,190 +888,7 @@
       </section>
 
       
-      <section id="settingsPage" class="page">
-        <div class="page-header">
-          <div>
-            <h1>Configurações do Sistema</h1>
-            <p class="subtitle">Gerencie seu perfil, preferências visuais e alertas operacionais</p>
-          </div>
-        </div>
 
-        <div class="settings-grid">
-          
-          <div class="settings-nav">
-            <button class="settings-nav-btn active" data-tab="tabPerfil">
-              <i class="ph ph-user-gear"></i> Meu Perfil
-            </button>
-            <button class="settings-nav-btn" data-tab="tabNotificacoes">
-              <i class="ph ph-bell-ringing"></i> Notificações
-            </button>
-            <button class="settings-nav-btn" data-tab="tabAparencia">
-              <i class="ph ph-palette"></i> Aparência & Sistema
-            </button>
-          </div>
-
-          
-          <div class="settings-content-card">
-            
-            <div id="tabPerfil" class="settings-tab-pane active">
-              <h3>Informações Pessoais</h3>
-              <p class="tab-desc">Personalize sua foto de exibição e suas informações de contato operacionais.</p>
-              
-              <div class="profile-avatar-section">
-                <label>Selecione seu Avatar Operacional</label>
-                <div class="avatar-selector-grid">
-                  <div class="avatar-option selected" data-avatar="admin">
-                    <i class="ph ph-user-gear"></i>
-                    <span>Admin</span>
-                  </div>
-                  <div class="avatar-option" data-avatar="medico">
-                    <i class="ph ph-stethoscope"></i>
-                    <span>Médico</span>
-                  </div>
-                  <div class="avatar-option" data-avatar="enfermeiro">
-                    <i class="ph ph-first-aid"></i>
-                    <span>Enfermeiro</span>
-                  </div>
-                  <div class="avatar-option" data-avatar="socorrista">
-                    <i class="ph ph-siren"></i>
-                    <span>Socorrista</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-grid" style="margin-top: 24px;">
-                <div class="form-group">
-                  <label>Nome Completo</label>
-                  <input type="text" id="settingProfileName" placeholder="Ex: Lucca Admin" />
-                </div>
-                <div class="form-group">
-                  <label>E-mail Institucional</label>
-                  <input type="email" id="settingProfileEmail" placeholder="Ex: admin@medfleet.com" />
-                </div>
-                <div class="form-group">
-                  <label>Matrícula Hospitalar (Bloqueado)</label>
-                  <input type="text" id="settingProfileMatricula" value="MF-2026-987" disabled />
-                </div>
-                <div class="form-group">
-                  <label>Cargo Operacional (Bloqueado)</label>
-                  <input type="text" id="settingProfileCargo" value="Administrador Geral" disabled />
-                </div>
-              </div>
-
-              <hr class="settings-hr" />
-
-              <h3>Alterar Senha</h3>
-              <p class="tab-desc">Mantenha sua conta segura alterando sua credencial de acesso regularmente.</p>
-              
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Senha Atual</label>
-                  <input type="password" id="settingProfileOldPass" placeholder="••••••••" />
-                </div>
-                <div class="form-group" style="grid-column: span 1;">
-                  <label>Nova Senha</label>
-                  <input type="password" id="settingProfileNewPass" placeholder="Mínimo 6 caracteres" />
-                </div>
-                <div class="form-group" style="grid-column: span 1;">
-                  <label>Confirmar Nova Senha</label>
-                  <input type="password" id="settingProfileConfirmPass" placeholder="Repita a nova senha" />
-                </div>
-              </div>
-
-              <div class="settings-footer">
-                <button id="btnSaveProfile" class="btn-primary" style="border:none; cursor:pointer;"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
-              </div>
-            </div>
-
-            
-            <div id="tabNotificacoes" class="settings-tab-pane">
-              <h3>Preferências de Alerta</h3>
-              <p class="tab-desc">Gerencie a forma como os avisos visuais e lembretes são exibidos na tela.</p>
-
-              <div class="settings-option-list">
-                <div class="settings-option-item">
-                  <div class="option-info">
-                    <h4>Notificações no Navegador (Push)</h4>
-                    <p>Exibir alertas nativos do navegador quando novas ocorrências forem abertas por outros setores.</p>
-                  </div>
-                  <label class="toggle-switch">
-                    <input type="checkbox" id="settingNotifyPush" checked>
-                    <span class="toggle-slider"></span>
-                  </label>
-                </div>
-
-                <div class="settings-option-item">
-                  <div class="option-info">
-                    <h4>Lembretes de Revisão de Viatura</h4>
-                    <p>Disparar um aviso quando uma ambulância ativa atingir quilometragem de manutenção preventiva.</p>
-                  </div>
-                  <label class="toggle-switch">
-                    <input type="checkbox" id="settingNotifyMaint" checked>
-                    <span class="toggle-slider"></span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            
-            <div id="tabAparencia" class="settings-tab-pane">
-              <h3>Interface Operacional</h3>
-              <p class="tab-desc">Ajuste os parâmetros visuais para tornar o uso do painel mais confortável.</p>
-
-              <div class="settings-option-list">
-                <div class="settings-option-item">
-                  <div class="option-info">
-                    <h4>Modo Escuro (Dark Mode)</h4>
-                    <p>Alterna para a paleta escura que reduz a fadiga ocular durante plantões noturnos.</p>
-                  </div>
-                  <label class="toggle-switch">
-                    <input type="checkbox" id="settingDarkModeToggle">
-                    <span class="toggle-slider"></span>
-                  </label>
-                </div>
-
-                <div class="settings-option-item">
-                  <div class="option-info">
-                    <h4>Layout de Alta Densidade (Modo Compacto)</h4>
-                    <p>Reduz paddings e espaçamentos dos cards. Perfeito para monitorar múltiplos veículos sem rolar a página.</p>
-                  </div>
-                  <label class="toggle-switch">
-                    <input type="checkbox" id="settingCompactLayout">
-                    <span class="toggle-slider"></span>
-                  </label>
-                </div>
-              </div>
-
-              <hr class="settings-hr" />
-
-              <h3>Parâmetros de Localização</h3>
-              <p class="tab-desc">Regule a exibição de horários das ocorrências registradas no sistema.</p>
-
-              <div class="form-group" style="max-width: 400px; margin-bottom: 24px;">
-                <label>Fuso Horário Operacional</label>
-                <select id="settingTimezone" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text);">
-                  <option value="America/Sao_Paulo">América do Sul (Brasília - GMT-3)</option>
-                  <option value="America/Manaus">América do Sul (Manaus - GMT-4)</option>
-                  <option value="GMT">Horário Padrão de Greenwich (GMT-0)</option>
-                </select>
-              </div>
-
-              <hr class="settings-hr" />
-
-              <h3 style="color: #ef4444;">Área de Segurança</h3>
-              <p class="tab-desc">Opções que afetam os caches locais guardados em seu navegador.</p>
-
-              <div style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
-                <div>
-                  <h4 style="color: #ef4444; font-size: 14px; font-weight: 600;">Redefinir Dados de Simulação</h4>
-                  <p style="font-size: 12px; color: var(--text-light); margin-top: 2px;">Isso irá apagar todo o cache do localStorage e recarregar os dados padrões da frota hospitalar.</p>
-                </div>
-                <button id="btnClearCache" class="btn-outline-danger" style="padding: 10px 16px; font-size: 13px; font-weight: 600; border-radius: 10px; border: 1px solid #ef4444; background: transparent; color: #ef4444; cursor: pointer; transition: 0.2s;">Redefinir Dados</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
     </main>
   </div>
@@ -1158,7 +899,7 @@
   <script src="js/funcionarios.js"></script>
   <script src="js/ocorrencias.js"></script>
   <script src="js/equipe_medica.js"></script>
-  <script src="js/configuracoes.js"></script>
+
   <div id="toastContainer" class="toast-container"></div>
 </body>
 

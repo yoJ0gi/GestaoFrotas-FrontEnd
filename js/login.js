@@ -1,76 +1,65 @@
-
 if (localStorage.getItem("token")) {
   window.location.href = "index.html";
 }
 
-const senhaInput = document.getElementById("senha");
-const toggleSenha = document.getElementById("toggleSenha");
-const form = document.getElementById("loginForm");
-const erro = document.getElementById("erro");
+const campoSenha = document.getElementById("senha");
+const alternarSenhaBtn = document.getElementById("toggleSenha");
+const formularioLogin = document.getElementById("loginForm");
+const mensagemErro = document.getElementById("erro");
 
-toggleSenha.addEventListener("click", () => {
-  if (senhaInput.type === "password") {
-    senhaInput.type = "text";
-    toggleSenha.textContent = "🙈";
-  } else {
-    senhaInput.type = "password";
-    toggleSenha.textContent = "👁";
-  }
-});
+// Alternar visibilidade da senha
+alternarSenhaBtn.onclick = () => {
+  const mostrar = campoSenha.type === "password";
+  campoSenha.type = mostrar ? "text" : "password";
+  alternarSenhaBtn.textContent = mostrar ? "🙈" : "👁";
+};
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+// Submissão do login
+formularioLogin.onsubmit = async (evento) => {
+  evento.preventDefault();
 
   const usuario = document.getElementById("usuario").value.trim();
-  const senha = senhaInput.value;
+  const senha = campoSenha.value;
 
   if (!usuario || !senha) {
-    erro.textContent = "Preencha todos os campos!";
+    mensagemErro.textContent = "Preencha todos os campos!";
     return;
   }
 
-  const btnLogin = form.querySelector(".btn-login");
-  const textoOriginal = btnLogin.textContent;
+  const botaoLogin = formularioLogin.querySelector(".btn-login");
+  const textoOriginal = botaoLogin.textContent;
 
-  btnLogin.textContent = "Entrando...";
-  btnLogin.disabled = true;
-  erro.textContent = "";
+  botaoLogin.textContent = "Entrando...";
+  botaoLogin.disabled = true;
+  mensagemErro.textContent = "";
 
   try {
-    
+    // Verificação para credenciais admin mockadas
     if ((usuario === "admin" || usuario === "admin@email.com") && senha === "admin123") {
       localStorage.setItem("token", "MOCKED_JWT_TOKEN_MEDFLEET_2026_SESSION");
       window.location.href = "index.html";
       return;
     }
 
-    const response = await fetch("http://127.0.0.1:8000/api/login/", {
+    const resposta = await fetch("/api/login/", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        username: usuario,
-        password: senha
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: usuario, password: senha })
     });
 
-    if (!response.ok) {
-      erro.textContent = "Usuário ou senha inválidos.";
+    if (!resposta.ok) {
+      mensagemErro.textContent = "Usuário ou senha inválidos.";
       return;
     }
 
-    const data = await response.json();
-
-    localStorage.setItem("token", data.token);
-
+    const dados = await resposta.json();
+    localStorage.setItem("token", dados.token);
     window.location.href = "index.html";
-
-  } catch (err) {
-    console.error(err);
-    erro.textContent = "Não foi possível conectar ao servidor backend.";
+  } catch (erro) {
+    console.error("Erro ao realizar login:", erro);
+    mensagemErro.textContent = "Não foi possível conectar ao servidor backend.";
   } finally {
-    btnLogin.textContent = textoOriginal;
-    btnLogin.disabled = false;
+    botaoLogin.textContent = textoOriginal;
+    botaoLogin.disabled = false;
   }
-});
+};

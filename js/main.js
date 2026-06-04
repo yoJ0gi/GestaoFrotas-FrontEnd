@@ -1,25 +1,22 @@
 const token = localStorage.getItem("token");
-
 if (!token) {
   window.location.href = "login.html";
 }
 
-const API = "http://127.0.0.1:8000/api";
+const API = "/api";
 
-const _originalFetch = window.fetch;
-window.fetch = function(url, options = {}) {
-  if (typeof url === 'string' && url.startsWith(API)) {
-    const token = localStorage.getItem("token");
-    if (token && token !== "MOCKED_JWT_TOKEN_MEDFLEET_2026_SESSION") {
-      options.headers = {
-        ...(options.headers || {}),
-        "Authorization": `Token ${token}`
-      };
-    }
+// Função para requisições com autenticação
+async function fazerRequisicao(caminho, opcoes = {}) {
+  const token = localStorage.getItem("token");
+  if (!opcoes.headers) opcoes.headers = {};
+  if (token) {
+    opcoes.headers["Authorization"] = `Token ${token}`;
   }
-  return _originalFetch.call(this, url, options);
-};
+  return fetch(API + caminho, opcoes);
+}
+window.fazerRequisicao = fazerRequisicao;
 
+// IDs de edição e cache local temporário
 let funcionarioEditandoId = null;
 let veiculoEditandoId = null;
 let manutencaoEditandoId = null;
@@ -47,79 +44,50 @@ let equipesCache = [
 ];
 let membrosSelecionadosIds = [];
 
-document.querySelectorAll(".sidebar-nav-main a, .sidebar-submenu a").forEach((link) => {
-  link.addEventListener("click", (e) => {
+// Gerenciamento de Cliques no Menu Lateral
+document.querySelectorAll(".sidebar-nav-main a, .sidebar-submenu a").forEach(link => {
+  link.onclick = (e) => {
     e.preventDefault();
-    
-    
-    if (link.closest(".sidebar-submenu")) {
-      const filter = link.getAttribute("data-filter");
-      currentFuncionarioFilter = filter;
-      
-      
-      document.querySelectorAll(".sidebar-submenu a").forEach(sub => sub.classList.remove("active"));
-      link.classList.add("active");
-      
-      
-      const parentLink = document.querySelector('[data-target="funcionariosPage"]');
-      if (parentLink) {
-        document.querySelectorAll(".sidebar-nav-main a").forEach(l => {
-          if (!l.closest(".sidebar-submenu")) l.classList.remove("active");
-        });
-        parentLink.classList.add("active");
-      }
-      
-      showPage("funcionariosPage");
-      return;
-    }
-
+    const isSubmenu = link.closest(".sidebar-submenu");
     const target = link.getAttribute("data-target");
-    
-    
-    if (target === "funcionariosPage") {
-      currentFuncionarioFilter = null;
-      document.querySelectorAll(".sidebar-submenu a").forEach(sub => sub.classList.remove("active"));
-    }
 
-    showPage(target);
-  });
+    if (isSubmenu) {
+      currentFuncionarioFilter = link.getAttribute("data-filter");
+      document.querySelectorAll(".sidebar-submenu a").forEach(s => s.classList.toggle("active", s === link));
+      
+      const parent = document.querySelector('[data-target="funcionariosPage"]');
+      if (parent) {
+        document.querySelectorAll(".sidebar-nav-main a:not(.sidebar-submenu a)").forEach(l => l.classList.remove("active"));
+        parent.classList.add("active");
+      }
+      mostrarPagina("funcionariosPage");
+    } else {
+      if (target === "funcionariosPage") {
+        currentFuncionarioFilter = null;
+        document.querySelectorAll(".sidebar-submenu a").forEach(s => s.classList.remove("active"));
+      }
+      mostrarPagina(target);
+    }
+  };
 });
 
-function showPage(pageId) {
-  document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
-  document.querySelectorAll(".sidebar-nav-main a").forEach((l) => {
-    if (!l.closest(".sidebar-submenu")) l.classList.remove("active");
+// Navegação entre telas SPA
+function mostrarPagina(idPagina) {
+  document.querySelectorAll(".page").forEach(p => p.classList.toggle("active", p.id === idPagina));
+  
+  document.querySelectorAll(".sidebar-nav-main a:not(.sidebar-submenu a)").forEach(link => {
+    link.classList.toggle("active", link.getAttribute("data-target") === idPagina);
   });
 
-  const pageEl = document.getElementById(pageId);
-  if (pageEl) pageEl.classList.add("active");
-
-  const targetLink = document.querySelector(`[data-target="${pageId}"]:not(.sidebar-submenu a)`);
-  if (targetLink) targetLink.classList.add("active");
-
-  
-  const settingsBtn = document.getElementById("settingsLink");
-  if (settingsBtn) {
-    if (pageId === "settingsPage") {
-      settingsBtn.classList.add("active");
-    } else {
-      settingsBtn.classList.remove("active");
-    }
-  }
-
-  
   const submenu = document.getElementById("funcionariosSubmenu");
   if (submenu) {
-    if (pageId === "funcionariosPage") {
-      submenu.classList.add("open");
-    } else {
-      submenu.classList.remove("open");
-    }
+    submenu.classList.toggle("open", idPagina === "funcionariosPage");
   }
 
-  loadPageData(pageId);
+  carregarDadosPagina(idPagina);
 }
 
+// Mapeamento e controle dos painéis de detalhes deslizantes
 const panelMap = {
   veiculos:     { sidebar: 'veiculosSidebar',     detail: 'veiculosDetail' },
   funcionarios: { sidebar: 'funcionariosSidebar', detail: 'funcionariosDetail' },
@@ -127,420 +95,167 @@ const panelMap = {
   equipeMedica: { sidebar: 'equipeMedicaSidebar', detail: 'equipeMedicaDetail' }
 };
 
-function showDetails(section) {
-  const map = panelMap[section];
-  if (!map) return;
-  const sidebar = document.getElementById(map.sidebar);
-  const detail = document.getElementById(map.detail);
-  if (sidebar) sidebar.classList.add('hidden');
-  if (detail) detail.classList.remove('hidden');
+function mostrarDetalhes(secao) {
+  const map = panelMap[secao];
+  if (map) {
+    document.getElementById(map.sidebar)?.classList.add('hidden');
+    document.getElementById(map.detail)?.classList.remove('hidden');
+  }
 }
 
-function closeDetails(section) {
-  const map = panelMap[section];
-  if (!map) return;
-  const sidebar = document.getElementById(map.sidebar);
-  const detail = document.getElementById(map.detail);
-  if (detail) detail.classList.add('hidden');
-  if (sidebar) sidebar.classList.remove('hidden');
+function fecharDetalhes(secao) {
+  const map = panelMap[secao];
+  if (map) {
+    document.getElementById(map.detail)?.classList.add('hidden');
+    document.getElementById(map.sidebar)?.classList.remove('hidden');
+  }
 }
 
+// Inicialização e controle do Tema (Dark Mode)
 function initTheme() {
   const saved = localStorage.getItem('medfleet-theme');
+  const isLight = saved === 'light';
+  document.documentElement.classList.toggle('dark', !isLight);
   const toggle = document.getElementById('themeToggleSwitch');
-  
-  if (saved === 'light') {
-    document.documentElement.classList.remove('dark');
-    if (toggle) toggle.checked = false;
-  } else {
-    document.documentElement.classList.add('dark');
-    if (toggle) toggle.checked = true;
-  }
+  if (toggle) toggle.checked = !isLight;
 }
 
 const themeToggle = document.getElementById('themeToggleSwitch');
 if (themeToggle) {
-  themeToggle.addEventListener('change', () => {
-    if (themeToggle.checked) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('medfleet-theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('medfleet-theme', 'light');
-    }
-  });
+  themeToggle.onchange = () => {
+    const isDark = themeToggle.checked;
+    document.documentElement.classList.toggle('dark', isDark);
+    localStorage.setItem('medfleet-theme', isDark ? 'dark' : 'light');
+  };
 }
-
 initTheme();
 
-function setupAutocomplete(inputId, listaId, getData, format) {
-  const input = document.getElementById(inputId);
-  const lista = document.getElementById(listaId);
-
-  input.addEventListener("input", () => {
-    const termo = input.value.toLowerCase();
-    lista.innerHTML = "";
-
-    if (!termo) {
-      lista.classList.add("hidden");
-      return;
-    }
-
-    const filtrados = getData().filter(item =>
-      format(item).toLowerCase().includes(termo)
-    );
-
-    filtrados.forEach(item => {
-      const li = document.createElement("li");
-      li.textContent = format(item);
-
-      li.onclick = () => {
-        input.value = format(item);
-        input.dataset.id = item.id;
-        lista.classList.add("hidden");
-      };
-
-      lista.appendChild(li);
-    });
-
-    lista.classList.remove("hidden");
+// Preenchimento de Selects Dinâmicos (Substitui os autocompletes)
+function preencherSelect(idSelect, itens, textoPadrao, obterValor, obterTexto) {
+  const select = document.getElementById(idSelect);
+  if (!select) return;
+  select.innerHTML = `<option value="">${textoPadrao}</option>`;
+  itens.forEach(item => {
+    const opcao = document.createElement("option");
+    opcao.value = obterValor(item);
+    opcao.textContent = obterTexto(item);
+    select.appendChild(opcao);
   });
 }
 
-function initAutocompletes() {
-  setupAutocomplete(
-    "inputMotorista",
-    "motoristaSugestoes",
-    () => funcionariosCache.filter(f => f.cargo === "Motorista" || f.apto_dirigir === "Sim"),
-    (m) => `${m.nome} (${m.cargo})`
-  );
+function atualizarTodosSelects() {
+  // 1. Motorista Responsável (Veículos)
+  const motoristas = funcionariosCache.filter(f => f.cargo === "Motorista" || f.apto_dirigir === "Sim");
+  preencherSelect("inputMotorista", motoristas, "Selecione o motorista responsável...", f => f.id, f => `${f.nome} (${f.cargo})`);
 
-  setupAutocomplete(
-    "inputVeiculoManut",
-    "veiculoSugestoesManut",
-    () => veiculosCache,
-    (v) => `${v.placa} - ${v.modelo}`
-  );
+  // 2. Veículo (Manutenções)
+  preencherSelect("inputVeiculoManut", veiculosCache, "Selecione a viatura...", v => v.id, v => `${v.placa} - ${v.modelo}`);
 
-  setupAutocomplete(
-    "inputVeiculoAbast",
-    "veiculoSugestoesAbast",
-    () => veiculosCache,
-    (v) => `${v.placa} - ${v.modelo}`
-  );
+  // 3. Veículo (Abastecimentos)
+  preencherSelect("inputVeiculoAbast", veiculosCache, "Selecione a viatura...", v => v.id, v => `${v.placa} - ${v.modelo}`);
 
-  setupAutocomplete(
-    "inputOcorrenciaVeiculo",
-    "ocorrenciaVeiculoSugestoes",
-    () => veiculosCache,
-    (v) => `${v.placa} - ${v.modelo}`
-  );
+  // 4. Viatura Despachada (Ocorrências)
+  preencherSelect("inputOcorrenciaVeiculo", veiculosCache, "Selecione a viatura...", v => v.placa, v => `${v.placa} - ${v.modelo}`);
 
-  setupAutocomplete(
-    "inputOcorrenciaEquipe",
-    "ocorrenciaEquipeSugestoes",
-    () => funcionariosCache.filter(f => f.cargo !== "Motorista"),
-    (e) => `${e.nome} (${e.cargo})`
-  );
+  // 5. Equipe / Motorista (Ocorrências)
+  const equipesEProfissionais = [
+    ...equipesCache.map(eq => ({ id: eq.nome, nome: eq.nome, tipo: "Equipe" })),
+    ...funcionariosCache.map(f => ({ id: f.nome, nome: f.nome, tipo: f.cargo }))
+  ];
+  preencherSelect("inputOcorrenciaEquipe", equipesEProfissionais, "Selecione a equipe ou profissional...", item => item.id, item => `${item.nome} (${item.tipo})`);
+
+  // 6. Membro a Adicionar (Equipe Médica)
+  atualizarSelectMembrosEquipe();
 }
 
-function inputValue(id) {
-  return document.getElementById(id).value;
+function atualizarSelectMembrosEquipe() {
+  const select = document.getElementById("inputEquipeMembroBuscar");
+  if (!select) return;
+  const filtrados = funcionariosCache.filter(f => !membrosSelecionadosIds.includes(f.id));
+  preencherSelect("inputEquipeMembroBuscar", filtrados, "Selecione um profissional para adicionar...", f => f.id, f => `${f.nome} (${f.cargo})`);
 }
 
-function loadPageData(pageId) {
-  if (pageId === "dashboardPage") loadDashboard();
-  if (pageId === "veiculosPage") loadVeiculos();
-  if (pageId === "funcionariosPage") loadFuncionarios(currentFuncionarioFilter);
-  if (pageId === "ocorrenciasPage") loadOcorrencias();
-  if (pageId === "manutencoesPage") loadManutencoes();
-  if (pageId === "abastecimentosPage") loadAbastecimentos();
-  if (pageId === "equipeMedicaPage") loadEquipes();
+window.preencherSelect = preencherSelect;
+window.atualizarTodosSelects = atualizarTodosSelects;
+window.atualizarSelectMembrosEquipe = atualizarSelectMembrosEquipe;
+
+const obterValorInput = (id) => document.getElementById(id).value;
+
+function carregarDadosPagina(idPagina) {
+  if (idPagina === "dashboardPage") carregarDashboard();
+  if (idPagina === "veiculosPage") carregarVeiculos();
+  if (idPagina === "funcionariosPage") carregarFuncionarios(currentFuncionarioFilter);
+  if (idPagina === "ocorrenciasPage") carregarOcorrencias();
+  if (idPagina === "manutencoesPage") carregarManutencoes();
+  if (idPagina === "abastecimentosPage") carregarAbastecimentos();
+  if (idPagina === "equipeMedicaPage") carregarEquipes();
 }
 
+// Inicialização ao carregar a página
 document.addEventListener("DOMContentLoaded", async () => {
-  await loadFuncionariosCache();
-  await loadVeiculosCache();
-  initAutocompletes();
-  initEquipeAutocomplete();
-  loadDashboard();
-  initNotificationSystem();
+  await carregarCacheFuncionarios();
+  await carregarCacheVeiculos();
+  atualizarTodosSelects();
+  carregarDashboard();
 
-  
-  initSettingsPage();
-  loadUserProfile();
-  loadNotificationSettings();
-  loadLayoutDensity();
-  initLayoutDensity();
-  loadTimezone();
-  initTimezone();
-  initCacheCleaner();
-
-  
-  const settingsBtn = document.getElementById("settingsLink");
-  if (settingsBtn) {
-    settingsBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      showPage("settingsPage");
-    });
-  }
-
-  
   const logoutBtn = document.getElementById("logoutLink");
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", (e) => {
+    logoutBtn.onclick = (e) => {
       e.preventDefault();
       localStorage.removeItem("token");
       window.location.href = "login.html";
-    });
+    };
   }
 
-  
-  initUserProfileDropdown();
-
-  
-  initSidebarBottomToggle();
+  inicializarToggleInferiorSidebar();
 });
-function toggleDropdown() {
-  document.getElementById("options").classList.toggle("active");
-}
 
-function selectOption(valor) {
-  document.querySelector(".selected").innerText = valor + " ▼";
-  document.getElementById("options").classList.remove("active");
-}
-
-function initSidebarBottomToggle() {
-  const toggleBtn = document.getElementById("sidebarBottomToggleBtn");
+// Painel inferior da Sidebar Retrátil
+function inicializarToggleInferiorSidebar() {
+  const btn = document.getElementById("sidebarBottomToggleBtn");
   const content = document.getElementById("sidebarBottomContent");
   const icon = document.getElementById("sidebarBottomToggleIcon");
   const label = document.getElementById("sidebarBottomToggleLabel");
+  if (!btn || !content || !icon) return;
 
-  if (!toggleBtn || !content || !icon) return;
+  const toggle = (collapsed) => {
+    content.classList.toggle("collapsed", collapsed);
+    icon.classList.toggle("ph-caret-up", collapsed);
+    icon.classList.toggle("ph-caret-down", !collapsed);
+    if (label) label.style.display = collapsed ? "" : "none";
+    localStorage.setItem("medfleet_sidebar_bottom_collapsed", collapsed);
+  };
 
-  function applyState(isCollapsed) {
-    if (isCollapsed) {
-      content.classList.add("collapsed");
-      icon.classList.remove("ph-caret-down");
-      icon.classList.add("ph-caret-up");
-      if (label) label.style.display = "";
-    } else {
-      content.classList.remove("collapsed");
-      icon.classList.remove("ph-caret-up");
-      icon.classList.add("ph-caret-down");
-      if (label) label.style.display = "none";
-    }
-  }
-
-  
-  const saved = localStorage.getItem("medfleet_sidebar_bottom_collapsed");
-  const isCollapsed = saved === "true";
-  applyState(isCollapsed);
-
-  toggleBtn.addEventListener("click", () => {
-    const collapsed = content.classList.contains("collapsed");
-    const next = !collapsed;
-    applyState(next);
-    localStorage.setItem("medfleet_sidebar_bottom_collapsed", String(next));
-  });
+  toggle(localStorage.getItem("medfleet_sidebar_bottom_collapsed") === "true");
+  btn.onclick = () => toggle(!content.classList.contains("collapsed"));
 }
 
-function showToast(message, type = "success") {
+// Sistema de Alertas Visuais (Toast)
+function mostrarToast(message, type = "success") {
   const container = document.getElementById("toastContainer");
   if (!container) return;
 
+  const icons = {
+    success: "ph-check-circle",
+    warning: "ph-warning-circle",
+    error: "ph-x-circle",
+    emergency: "ph-x-circle"
+  };
+
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
-
-  let iconClass = "ph ph-check-circle";
-  if (type === "warning") {
-    iconClass = "ph ph-warning-circle";
-  } else if (type === "error" || type === "emergency") {
-    iconClass = "ph ph-x-circle";
-  }
-
   toast.innerHTML = `
-    <div class="toast-icon">
-      <i class="${iconClass}"></i>
-    </div>
+    <div class="toast-icon"><i class="ph ${icons[type] || icons.success}"></i></div>
     <span class="toast-message">${message}</span>
   `;
 
   container.appendChild(toast);
-
-  setTimeout(() => {
-    toast.classList.add("show");
-  }, 10);
+  setTimeout(() => toast.classList.add("show"), 10);
 
   setTimeout(() => {
     toast.classList.remove("show");
-    setTimeout(() => {
-      toast.remove();
-    }, 400);
+    setTimeout(() => toast.remove(), 400);
   }, 4000);
-}
-
-function initNotificationSystem() {
-  const btn = document.getElementById("notificationBtn");
-  const dropdown = document.getElementById("notificationDropdown");
-  const btnMarkRead = document.getElementById("btnMarkAllRead");
-
-  if (!btn || !dropdown) return;
-
-  btn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    
-    
-    const isHidden = dropdown.classList.contains("hidden");
-    if (isHidden) {
-      closeProfileDropdown(); 
-      updateNotificationDropdown();
-      dropdown.classList.remove("hidden");
-      setTimeout(() => dropdown.classList.add("active"), 10);
-    } else {
-      closeNotificationDropdown();
-    }
-  });
-
-  
-  document.addEventListener("click", (e) => {
-    if (!dropdown.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
-      closeNotificationDropdown();
-    }
-  });
-
-  if (btnMarkRead) {
-    btnMarkRead.addEventListener("click", () => {
-      
-      const dot = btn.querySelector(".notification-dot");
-      if (dot) dot.remove();
-
-      
-      const list = document.getElementById("dropdownNotificationList");
-      if (list) {
-        list.innerHTML = `
-          <li style="justify-content: center; align-items: center; padding: 24px; color: var(--text-muted); flex-direction: column; gap: 8px;">
-            <i class="ph ph-check-circle" style="font-size: 32px; color: #10b981;"></i>
-            <span>Nenhum alerta recente</span>
-          </li>
-        `;
-      }
-      
-      showToast("Alertas marcados como lidos!", "success");
-      closeNotificationDropdown();
-    });
-  }
-}
-
-function closeNotificationDropdown() {
-  const dropdown = document.getElementById("notificationDropdown");
-  if (!dropdown) return;
-  dropdown.classList.remove("active");
-  setTimeout(() => dropdown.classList.add("hidden"), 300);
-}
-
-function updateNotificationDropdown() {
-  const list = document.getElementById("dropdownNotificationList");
-  if (!list) return;
-
-  list.innerHTML = "";
-  const items = [];
-
-  
-  if (typeof ocorrenciasCache !== "undefined") {
-    ocorrenciasCache.forEach(o => {
-      if (o.status === "Ativa") {
-        const isCritical = o.prioridade === "Crítica";
-        items.push(`
-          <li onclick="showPage('ocorrenciasPage'); selectOcorrencia(${o.id}); closeNotificationDropdown();">
-            <i class="ph ${isCritical ? "ph-warning-octagon" : "ph-warning"}" style="color: ${isCritical ? "#ef4444" : "#f59e0b"};"></i>
-            <div>
-              <div style="font-weight: 600; color: var(--text);">${o.titulo}</div>
-              <div style="font-size: 11px; margin-top: 2px;">Paciente: ${o.paciente} | Prioridade: ${o.prioridade}</div>
-            </div>
-          </li>
-        `);
-      }
-    });
-  }
-
-  
-  if (typeof veiculosCache !== "undefined") {
-    veiculosCache.forEach((v, idx) => {
-      const s = v.status || (idx % 4 === 1 ? "Em rota" : idx % 4 === 2 ? "Emergência" : idx % 4 === 3 ? "Manutenção" : "Disponível");
-      if (s === "Manutenção") {
-        items.push(`
-          <li onclick="showPage('manutencoesPage'); closeNotificationDropdown();">
-            <i class="ph ph-wrench" style="color: #f59e0b;"></i>
-            <div>
-              <div style="font-weight: 600; color: var(--text);">Manutenção: Viatura ${v.placa}</div>
-              <div style="font-size: 11px; margin-top: 2px;">Ambulância ${v.modelo} indisponível na oficina.</div>
-            </div>
-          </li>
-        `);
-      }
-    });
-  }
-
-  
-  if (items.length === 0) {
-    list.innerHTML = `
-      <li style="justify-content: center; align-items: center; padding: 24px; color: var(--text-muted); flex-direction: column; gap: 8px;">
-        <i class="ph ph-check-circle" style="font-size: 32px; color: #10b981;"></i>
-        <span>Nenhum alerta recente</span>
-      </li>
-    `;
-  } else {
-    list.innerHTML = items.join("");
-  }
-}
-
-function initUserProfileDropdown() {
-  const btn = document.getElementById("userProfileBtn");
-  const dropdown = document.getElementById("profileDropdown");
-  const logoutBtn = document.getElementById("dropdownLogoutBtn");
-
-  if (!btn || !dropdown) return;
-
-  btn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    
-    
-    const isHidden = dropdown.classList.contains("hidden");
-    if (isHidden) {
-      closeNotificationDropdown(); 
-      dropdown.classList.remove("hidden");
-      setTimeout(() => dropdown.classList.add("active"), 10);
-    } else {
-      closeProfileDropdown();
-    }
-  });
-
-  
-  document.addEventListener("click", (e) => {
-    if (!dropdown.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
-      closeProfileDropdown();
-    }
-  });
-
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      closeProfileDropdown();
-      setTimeout(() => {
-        if (confirm("Deseja realmente sair do sistema (Logoff)?")) {
-          localStorage.removeItem("token");
-          window.location.href = "login.html";
-        }
-      }, 100);
-    });
-  }
-}
-
-function closeProfileDropdown() {
-  const dropdown = document.getElementById("profileDropdown");
-  if (!dropdown) return;
-  dropdown.classList.remove("active");
-  setTimeout(() => dropdown.classList.add("hidden"), 300);
 }
 
 console.log("Script carregou");

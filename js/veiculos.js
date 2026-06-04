@@ -1,16 +1,16 @@
-let usingMockVeiculos = false;
-let selectedVehicleId = null;
+let usandoMockVeiculos = false;
+let veiculoSelecionadoId = null;
 
-async function loadVeiculosCache() {
-  if (usingMockVeiculos) return; 
+async function carregarCacheVeiculos() {
+  if (usandoMockVeiculos) return; 
 
   try {
-    const res = await fetch(API + "/veiculos");
-    if (!res.ok) throw new Error("API failed");
-    veiculosCache = await res.json();
-  } catch (err) {
-    console.warn("Backend offline ou erro, usando mock data para veículos");
-    usingMockVeiculos = true;
+    const resposta = await fazerRequisicao("/veiculos");
+    if (!resposta.ok) throw new Error("API falhou");
+    veiculosCache = await resposta.json();
+  } catch (erro) {
+    console.warn("Backend offline ou com erro, usando dados mockados de veículos");
+    usandoMockVeiculos = true;
     veiculosCache = [
       { id: 1, placa: "AMB-1020", marca: "Mercedes-Benz", modelo: "Sprinter", categoria: "UTI Móvel", ano: 2023, km: 12500, motorista_nome: "Carlos Silva" },
       { id: 2, placa: "HOS-4B21", marca: "Renault", modelo: "Master", categoria: "Suporte Básico", ano: 2022, km: 45000, motorista_nome: "Ana Santos" },
@@ -20,13 +20,15 @@ async function loadVeiculosCache() {
   }
 }
 
-async function loadVeiculos() {
-  await loadVeiculosCache();
+async function carregarVeiculos() {
+  await carregarCacheVeiculos();
+  atualizarTodosSelects();
 
-  const list = document.getElementById("veiculosList");
-  list.innerHTML = "";
+  const lista = document.getElementById("veiculosList");
+  if (!lista) return;
+  lista.innerHTML = "";
 
-  const statuses = [
+  const configStatus = [
     { label: "Disponível", class: "badge-available", icon: "ph-check-circle" },
     { label: "Em rota", class: "badge-route", icon: "ph-navigation-arrow" },
     { label: "Emergência", class: "badge-emergency", icon: "ph-warning-circle" },
@@ -34,18 +36,18 @@ async function loadVeiculos() {
   ];
 
   veiculosCache.forEach((v, index) => {
-    const card = document.createElement("div");
-    card.className = "tracking-card";
-    card.dataset.id = v.id;
-    if (v.id === selectedVehicleId) card.classList.add("selected");
+    const cartao = document.createElement("div");
+    cartao.className = "tracking-card";
+    cartao.dataset.id = v.id;
+    cartao.classList.toggle("selected", v.id === veiculoSelecionadoId);
 
-    const status = statuses[index % statuses.length];
+    const statusAtual = configStatus[index % configStatus.length];
 
-    card.innerHTML = `
+    cartao.innerHTML = `
       <div class="tc-header">
         <h3>${v.placa}</h3>
-        <span class="status-badge ${status.class}">
-          <i class="ph ${status.icon}"></i> ${status.label}
+        <span class="status-badge ${statusAtual.class}">
+          <i class="ph ${statusAtual.icon}"></i> ${statusAtual.label}
         </span>
       </div>
       <div class="tc-image">
@@ -53,191 +55,196 @@ async function loadVeiculos() {
       </div>
     `;
 
-    card.onclick = () => selectVehicle(v.id, status);
-
-    list.appendChild(card);
+    cartao.onclick = () => selecionarVeiculo(v.id, statusAtual);
+    lista.appendChild(cartao);
   });
 
-  closeDetails('veiculos');
+  fecharDetalhes('veiculos');
 }
 
-function selectVehicle(id, status) {
-  selectedVehicleId = id;
+function selecionarVeiculo(id, statusAtual) {
+  veiculoSelecionadoId = id;
   const v = veiculosCache.find(ve => ve.id === id);
   if (!v) return;
 
-  const cards = document.querySelectorAll("#veiculosList .tracking-card");
-  cards.forEach(card => {
-    if (Number(card.dataset.id) === Number(id)) {
-      card.classList.add("selected");
-    } else {
-      card.classList.remove("selected");
-    }
+  document.querySelectorAll("#veiculosList .tracking-card").forEach(cartao => {
+    cartao.classList.toggle("selected", Number(cartao.dataset.id) === Number(id));
   });
 
-  const detailPlate = document.getElementById("detailPlate");
-  if(detailPlate) detailPlate.textContent = v.placa;
+  const el = idDoc => document.getElementById(idDoc);
+  if (el("detailPlate")) el("detailPlate").textContent = v.placa;
   
-  const detailStatus = document.getElementById("detailStatus");
-  if(detailStatus) {
-    detailStatus.className = `status-badge ${status.class}`;
-    detailStatus.innerHTML = `<i class="ph ${status.icon}"></i> ${status.label}`;
+  if (el("detailStatus")) {
+    const statusEl = el("detailStatus");
+    statusEl.className = `status-badge ${statusAtual.class}`;
+    statusEl.innerHTML = `<i class="ph ${statusAtual.icon}"></i> ${statusAtual.label}`;
   }
 
-  const el = docId => document.getElementById(docId);
-  if(el("detailModelo")) el("detailModelo").textContent = `${v.marca || ''} ${v.modelo || ''}`;
-  if(el("detailCategoria")) el("detailCategoria").textContent = v.categoria || 'Não definida';
-  if(el("detailAno")) el("detailAno").textContent = v.ano || '-';
-  if(el("detailKm")) el("detailKm").textContent = `${v.km || 0} km`;
-  if(el("detailMotorista")) el("detailMotorista").textContent = v.motorista_nome || 'Não atribuído';
+  if (el("detailModelo")) el("detailModelo").textContent = `${v.marca || ''} ${v.modelo || ''}`;
+  if (el("detailCategoria")) el("detailCategoria").textContent = v.categoria || 'Não definida';
+  if (el("detailAno")) el("detailAno").textContent = v.ano || '-';
+  if (el("detailKm")) el("detailKm").textContent = `${v.km || 0} km`;
+  if (el("detailMotorista")) el("detailMotorista").textContent = v.motorista_nome || 'Não atribuído';
 
-  const btnEdit = el("btnEditVeiculo");
-  if(btnEdit) btnEdit.onclick = () => editVeiculo(v.id);
+  if (el("btnEditVeiculo")) el("btnEditVeiculo").onclick = () => editarVeiculo(v.id);
+  if (el("btnDeleteVeiculo")) {
+    el("btnDeleteVeiculo").onclick = () => {
+      if (confirm(`Tem certeza que deseja remover o veículo ${v.placa}?`)) {
+        deletarVeiculo(v.id);
+      }
+    };
+  }
 
-  const btnDel = el("btnDeleteVeiculo");
-  if(btnDel) btnDel.onclick = () => {
-    if(confirm(`Tem certeza que deseja remover o veículo ${v.placa}?`)) {
-      deleteVeiculo(v.id);
-    }
-  };
-
-  showDetails('veiculos');
+  mostrarDetalhes('veiculos');
 }
 
 document.getElementById("addVeiculoBtn").onclick = () => {
   veiculoEditandoId = null;
-  resetVeiculoForm();
+  limparFormularioVeiculo();
   document.getElementById("saveVeiculo").innerHTML = '<i class="ph ph-floppy-disk"></i> Salvar Veículo';
   document.getElementById("veiculoModal").classList.remove("hidden");
 };
 
-document.getElementById("cancelVeiculo").onclick = resetVeiculoForm;
-document.getElementById("closeVeiculoModal").onclick = resetVeiculoForm;
+document.getElementById("cancelVeiculo").onclick = limparFormularioVeiculo;
+document.getElementById("closeVeiculoModal").onclick = limparFormularioVeiculo;
 
 document.getElementById("saveVeiculo").onclick = async () => {
-  const motoristaId = document.getElementById("inputMotorista").dataset.id;
+  const motoristaId = document.getElementById("inputMotorista").value;
+  const motoristaObj = funcionariosCache.find(f => f.id == motoristaId);
+  const motoristaNome = motoristaObj ? motoristaObj.nome : "";
 
-  const data = {
-    placa: inputValue("inputPlaca"),
-    marca: inputValue("inputMarca"),
-    modelo: inputValue("inputModelo"),
-    categoria: inputValue("inputCategoria"),
-    ano: inputValue("inputAno"),
-    km: inputValue("inputKm"),
+  const dados = {
+    placa: obterValorInput("inputPlaca"),
+    marca: obterValorInput("inputMarca"),
+    modelo: obterValorInput("inputModelo"),
+    categoria: obterValorInput("inputCategoria"),
+    ano: obterValorInput("inputAno"),
+    km: obterValorInput("inputKm"),
     motorista_id: motoristaId || null
   };
 
-  const method = veiculoEditandoId ? "PUT" : "POST";
-  const url = veiculoEditandoId ? `${API}/veiculos/${veiculoEditandoId}` : `${API}/veiculos`;
+  const caminho = veiculoEditandoId ? `/veiculos/${veiculoEditandoId}` : "/veiculos";
 
   try {
-    const res = await fetch(url, {
-      method,
+    const resposta = await fazerRequisicao(caminho, {
+      method: veiculoEditandoId ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
+      body: JSON.stringify(dados)
     });
-    if (!res.ok) throw new Error("API Error");
-  } catch (err) {
-    console.warn("API Offline: Salvando veículo no mock temporário");
-    if (usingMockVeiculos) {
+    if (!resposta.ok) throw new Error("Erro na API");
+  } catch (erro) {
+    console.warn("Backend offline: Salvando no mock local temporário");
+    if (usandoMockVeiculos) {
       if (veiculoEditandoId) {
         const idx = veiculosCache.findIndex(v => v.id == veiculoEditandoId);
         if (idx > -1) {
-          veiculosCache[idx] = { ...veiculosCache[idx], ...data, motorista_nome: document.getElementById("inputMotorista").value };
+          veiculosCache[idx] = { ...veiculosCache[idx], ...dados, motorista_nome: motoristaNome };
         }
       } else {
-        const newId = veiculosCache.length > 0 ? Math.max(...veiculosCache.map(v => v.id)) + 1 : 1;
-        veiculosCache.push({ id: newId, ...data, motorista_nome: document.getElementById("inputMotorista").value });
-        selectedVehicleId = newId; 
+        const novoId = veiculosCache.length > 0 ? Math.max(...veiculosCache.map(v => v.id)) + 1 : 1;
+        veiculosCache.push({ id: novoId, ...dados, motorista_nome: motoristaNome });
+        veiculoSelecionadoId = novoId; 
       }
     }
   }
 
-  resetVeiculoForm();
-  loadVeiculos();
+  limparFormularioVeiculo();
+  carregarVeiculos();
 };
 
-function resetVeiculoForm() {
+function limparFormularioVeiculo() {
   ["inputPlaca", "inputMarca", "inputModelo", "inputCategoria", "inputAno", "inputKm", "inputMotorista"].forEach(id => {
     const el = document.getElementById(id);
-    el.value = "";
-    el.dataset.id = "";
+    if (el) {
+      el.value = "";
+      el.dataset.id = "";
+    }
   });
-
   document.getElementById("veiculoModal").classList.add("hidden");
 }
 
-async function editVeiculo(id) {
-  const v = veiculosCache.find(v => v.id == id);
+function editarVeiculo(id) {
+  const v = veiculosCache.find(ve => ve.id == id);
+  if (!v) return;
 
-  document.getElementById("inputPlaca").value = v.placa || "";
-  document.getElementById("inputMarca").value = v.marca || "";
-  document.getElementById("inputModelo").value = v.modelo || "";
-  document.getElementById("inputCategoria").value = v.categoria || "";
-  document.getElementById("inputAno").value = v.ano || "";
-  document.getElementById("inputKm").value = v.km || "";
+  const campoVal = (idCampo, valor) => {
+    const el = document.getElementById(idCampo);
+    if (el) el.value = valor || "";
+  };
 
-  const motoristaInput = document.getElementById("inputMotorista");
-  motoristaInput.value = v.motorista_nome || "";
-  motoristaInput.dataset.id = v.motorista_id || "";
+  campoVal("inputPlaca", v.placa);
+  campoVal("inputMarca", v.marca);
+  campoVal("inputModelo", v.modelo);
+  campoVal("inputCategoria", v.categoria);
+  campoVal("inputAno", v.ano);
+  campoVal("inputKm", v.km);
+
+  const motoristaSelect = document.getElementById("inputMotorista");
+  if (motoristaSelect) {
+    motoristaSelect.value = v.motorista_id || "";
+  }
 
   veiculoEditandoId = id;
   document.getElementById("saveVeiculo").innerHTML = '<i class="ph ph-pencil-simple"></i> Atualizar Veículo';
   document.getElementById("veiculoModal").classList.remove("hidden");
 }
 
-async function deleteVeiculo(id) {
+async function deletarVeiculo(id) {
   try {
-    const res = await fetch(`${API}/veiculos/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("API Error");
-  } catch(e) {
-    if(usingMockVeiculos) {
+    const resposta = await fazerRequisicao(`/veiculos/${id}`, { method: "DELETE" });
+    if (!resposta.ok) throw new Error("Erro na API");
+  } catch (erro) {
+    console.warn("Backend offline: Removendo do mock local temporário");
+    if (usandoMockVeiculos) {
       veiculosCache = veiculosCache.filter(v => v.id != id);
-      if (selectedVehicleId == id) selectedVehicleId = null;
+      if (veiculoSelecionadoId == id) veiculoSelecionadoId = null;
     }
   }
-  loadVeiculos();
+  carregarVeiculos();
 }
 
-
-let usingMockManutencoes = false;
+// ----------------------------------------------------
+// Seção de Manutenções
+// ----------------------------------------------------
+let usandoMockManutencoes = false;
 let manutencoesCache = [
   { id: 1, veiculo_placa: "AMB-1020", data: "2026-05-10", status: "Concluída", veiculo_id: 1 },
   { id: 2, veiculo_placa: "HOS-4B21", data: "2026-05-15", status: "Em Andamento", veiculo_id: 2 },
   { id: 3, veiculo_placa: "MED-9C44", data: "2026-05-20", status: "Agendada", veiculo_id: 3 }
 ];
 
-async function loadManutencoes() {
-  await loadVeiculosCache();
+async function carregarManutencoes() {
+  await carregarCacheVeiculos();
 
-  let data = [];
+  let dados = [];
   try {
-    if (usingMockManutencoes) {
-      data = manutencoesCache;
+    if (usandoMockManutencoes) {
+      dados = manutencoesCache;
     } else {
-      data = await fetch(API + "/manutencoes").then(r => {
-        if (!r.ok) throw new Error("API failed");
+      dados = await fazerRequisicao("/manutencoes").then(r => {
+        if (!r.ok) throw new Error("API falhou");
         return r.json();
       });
     }
-  } catch (err) {
+  } catch (erro) {
     console.warn("Backend offline, usando dados mockados de manutenções");
-    usingMockManutencoes = true;
-    data = manutencoesCache;
+    usandoMockManutencoes = true;
+    dados = manutencoesCache;
   }
 
-  const list = document.getElementById("manutencoesList");
-  list.innerHTML = "";
+  const lista = document.getElementById("manutencoesList");
+  if (!lista) return;
+  lista.innerHTML = "";
 
-  data.forEach(m => {
+  dados.forEach(m => {
     const div = document.createElement("div");
     div.className = "card";
     div.innerHTML = `
       <p>${m.veiculo_placa} - ${m.data} - ${m.status}</p>
-      <button onclick="editManutencao(${m.id})">Editar</button>
-      <button onclick="deleteManutencao(${m.id})">Excluir</button>
+      <button onclick="editarManutencao(${m.id})">Editar</button>
+      <button onclick="deletarManutencao(${m.id})">Excluir</button>
     `;
-    list.appendChild(div);
+    lista.appendChild(div);
   });
 }
 
@@ -251,64 +258,61 @@ document.getElementById("cancelManutencao").onclick = () => {
 };
 
 document.getElementById("saveManutencao").onclick = async () => {
-  const veiculoId = inputVeiculoManut.dataset.id;
-
-  if (!veiculoId) return showToast("Selecione um veículo válido", "warning");
+  const veiculoId = document.getElementById("inputVeiculoManut").value;
+  if (!veiculoId) return mostrarToast("Selecione um veículo válido", "warning");
 
   const veiculo = veiculosCache.find(v => v.id == veiculoId);
-  const placa = veiculo ? veiculo.placa : inputVeiculoManut.value;
+  const placa = veiculo ? veiculo.placa : "";
 
-  const data = {
+  const dados = {
     veiculo_id: veiculoId,
     veiculo_placa: placa,
     data: inputDataManut.value,
     status: inputStatusManut.value
   };
 
-  const method = manutencaoEditandoId ? "PUT" : "POST";
-  const url = manutencaoEditandoId ? `${API}/manutencoes/${manutencaoEditandoId}` : `${API}/manutencoes`;
+  const caminho = manutencaoEditandoId ? `/manutencoes/${manutencaoEditandoId}` : "/manutencoes";
 
   try {
-    const res = await fetch(url, {
-      method,
+    const resposta = await fazerRequisicao(caminho, {
+      method: manutencaoEditandoId ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
+      body: JSON.stringify(dados)
     });
-    if (!res.ok) throw new Error("API failed");
-  } catch (err) {
+    if (!resposta.ok) throw new Error("API falhou");
+  } catch (erro) {
     console.warn("Backend offline, salvando manutenção no cache local");
     if (manutencaoEditandoId) {
       const idx = manutencoesCache.findIndex(m => m.id == manutencaoEditandoId);
-      if (idx > -1) manutencoesCache[idx] = { ...manutencoesCache[idx], ...data };
+      if (idx > -1) manutencoesCache[idx] = { ...manutencoesCache[idx], ...dados };
     } else {
-      const newId = manutencoesCache.length > 0 ? Math.max(...manutencoesCache.map(m => m.id)) + 1 : 1;
-      manutencoesCache.push({ id: newId, ...data });
+      const novoId = manutencoesCache.length > 0 ? Math.max(...manutencoesCache.map(m => m.id)) + 1 : 1;
+      manutencoesCache.push({ id: novoId, ...dados });
     }
   }
 
   document.getElementById("manutencaoForm").classList.add("hidden");
-  loadManutencoes();
+  carregarManutencoes();
 };
 
-async function editManutencao(id) {
+async function editarManutencao(id) {
   let m;
   try {
-    if (usingMockManutencoes) {
+    if (usandoMockManutencoes) {
       m = manutencoesCache.find(m => m.id == id);
     } else {
-      const data = await fetch(API + "/manutencoes").then(r => r.json());
-      m = data.find(m => m.id == id);
+      const dados = await fazerRequisicao("/manutencoes").then(r => r.json());
+      m = dados.find(m => m.id == id);
     }
-  } catch(e) {
+  } catch (erro) {
     m = manutencoesCache.find(m => m.id == id);
   }
   if (!m) return;
 
-  const veiculo = veiculosCache.find(v => v.id == m.veiculo_id);
-
-  inputVeiculoManut.value = veiculo ? `${veiculo.placa} - ${veiculo.modelo}` : "";
-  inputVeiculoManut.dataset.id = m.veiculo_id;
-
+  const inputVeiculoManutSelect = document.getElementById("inputVeiculoManut");
+  if (inputVeiculoManutSelect) {
+    inputVeiculoManutSelect.value = m.veiculo_id || "";
+  }
   inputDataManut.value = m.data;
   inputStatusManut.value = m.status;
 
@@ -316,108 +320,118 @@ async function editManutencao(id) {
   document.getElementById("manutencaoForm").classList.remove("hidden");
 }
 
-async function deleteManutencao(id) {
+async function deletarManutencao(id) {
   try {
-    const res = await fetch(`${API}/manutencoes/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("API failed");
-  } catch(e) {
+    const resposta = await fazerRequisicao(`/manutencoes/${id}`, { method: "DELETE" });
+    if (!resposta.ok) throw new Error("Erro na API");
+  } catch (erro) {
     console.warn("Backend offline, removendo manutenção do cache local");
     manutencoesCache = manutencoesCache.filter(m => m.id != id);
   }
-  loadManutencoes();
+  carregarManutencoes();
 }
 
-
-let usingMockAbastecimentos = false;
+// ----------------------------------------------------
+// Seção de Abastecimentos
+// ----------------------------------------------------
+let usandoMockAbastecimentos = false;
 let abastecimentosCache = [
   { id: 1, veiculo_placa: "AMB-1020", data: "2026-05-12", tipo_combustivel: "diesel", posto: "Ipiranga", litros: "50", valor: "300", veiculo_id: 1 },
   { id: 2, veiculo_placa: "HOS-4B21", data: "2026-05-18", tipo_combustivel: "gasolina", posto: "Shell", litros: "40", valor: "240", veiculo_id: 2 }
 ];
 
-async function loadAbastecimentos() {
-  await loadVeiculosCache();
+async function carregarAbastecimentos() {
+  await carregarCacheVeiculos();
 
-  let data = [];
+  let dados = [];
   try {
-    if (usingMockAbastecimentos) {
-      data = abastecimentosCache;
+    if (usandoMockAbastecimentos) {
+      dados = abastecimentosCache;
     } else {
-      data = await fetch(API + "/abastecimentos").then(r => {
-        if (!r.ok) throw new Error("API failed");
+      dados = await fazerRequisicao("/abastecimentos").then(r => {
+        if (!r.ok) throw new Error("API falhou");
         return r.json();
       });
     }
-  } catch (err) {
+  } catch (erro) {
     console.warn("Backend offline, usando dados mockados de abastecimentos");
-    usingMockAbastecimentos = true;
-    data = abastecimentosCache;
+    usandoMockAbastecimentos = true;
+    dados = abastecimentosCache;
   }
 
-  const list = document.getElementById("abastecimentosList");
-  list.innerHTML = "";
+  const lista = document.getElementById("abastecimentosList");
+  if (!lista) return;
+  lista.innerHTML = "";
 
-  data.forEach(a => {
+  dados.forEach(a => {
     const div = document.createElement("div");
     div.className = "card";
     div.innerHTML = `
       <p>${a.veiculo_placa} - ${a.data} - ${a.tipo_combustivel}</p>
       <p>Posto: ${a.posto || "N/A"} | ${a.litros}L - R$${a.valor}</p>
-      <button onclick="editAbastecimento(${a.id})">Editar</button>
-      <button onclick="deleteAbastecimento(${a.id})">Excluir</button>
+      <button onclick="editarAbastecimento(${a.id})">Editar</button>
+      <button onclick="deletarAbastecimento(${a.id})">Excluir</button>
     `;
-    list.appendChild(div);
+    lista.appendChild(div);
   });
 }
 
-async function editAbastecimento(id) {
+async function editarAbastecimento(id) {
   let a;
   try {
-    if (usingMockAbastecimentos) {
+    if (usandoMockAbastecimentos) {
       a = abastecimentosCache.find(a => a.id == id);
     } else {
-      const data = await fetch(API + "/abastecimentos").then(r => r.json());
-      a = data.find(a => a.id == id);
+      const dados = await fazerRequisicao("/abastecimentos").then(r => r.json());
+      a = dados.find(a => a.id == id);
     }
-  } catch(e) {
+  } catch (erro) {
     a = abastecimentosCache.find(a => a.id == id);
   }
   if (!a) return;
 
-  inputVeiculoAbast.value = a.veiculo_placa;
-  inputVeiculoAbast.dataset.id = a.veiculo_id;
+  const inputVeiculoAbastSelect = document.getElementById("inputVeiculoAbast");
+  if (inputVeiculoAbastSelect) {
+    inputVeiculoAbastSelect.value = a.veiculo_id || "";
+  }
   inputDataAbast.value = a.data;
-  selectOption(a.tipo_combustivel);
-  inputPostPosto = document.getElementById("inputPosto");
-  if (inputPostPosto) inputPostPosto.value = a.posto || "";
-  inputLitros.value = a.litros;
-  inputValor.value = a.valor;
+  
+  const combEl = document.getElementById("combustivel");
+  if (combEl) combEl.value = a.tipo_combustivel;
+
+  const postoInput = document.getElementById("inputPosto");
+  if (postoInput) postoInput.value = a.posto || "";
+  
+  const inputLitros = document.getElementById("inputLitros");
+  if (inputLitros) inputLitros.value = a.litros || "";
+
+  const inputValor = document.getElementById("inputValor");
+  if (inputValor) inputValor.value = a.valor || "";
 
   abastecimentoEditandoId = id;
   document.getElementById("abastecimentoForm").classList.remove("hidden");
 }
 
-async function deleteAbastecimento(id) {
+async function deletarAbastecimento(id) {
   try {
-    const res = await fetch(`${API}/abastecimentos/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("API failed");
-  } catch(e) {
+    const resposta = await fazerRequisicao(`/abastecimentos/${id}`, { method: "DELETE" });
+    if (!resposta.ok) throw new Error("API falhou");
+  } catch (erro) {
     console.warn("Backend offline, removendo abastecimento do cache local");
     abastecimentosCache = abastecimentosCache.filter(a => a.id != id);
   }
-  loadAbastecimentos();
+  carregarAbastecimentos();
 }
 
 document.getElementById("addAbastecimentoBtn").onclick = () => {
   abastecimentoEditandoId = null;
-  resetAbastecimentoForm();
+  limparFormularioAbastecimento();
   document.getElementById("abastecimentoForm").classList.remove("hidden");
 };
 
-document.getElementById("cancelAbastecimento").onclick = () => {
-  resetAbastecimentoForm();
-};
+document.getElementById("cancelAbastecimento").onclick = limparFormularioAbastecimento;
 
-function resetAbastecimentoForm() {
+function limparFormularioAbastecimento() {
   ["inputVeiculoAbast", "inputDataAbast", "inputPosto", "inputLitros", "inputValor"].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -432,45 +446,43 @@ function resetAbastecimentoForm() {
 }
 
 document.getElementById("saveAbastecimento").onclick = async () => {
-  const veiculoId = inputVeiculoAbast.dataset.id;
-
-  if (!veiculoId) return showToast("Selecione um veículo válido", "warning");
+  const veiculoId = document.getElementById("inputVeiculoAbast").value;
+  if (!veiculoId) return mostrarToast("Selecione um veículo válido", "warning");
 
   const veiculo = veiculosCache.find(v => v.id == veiculoId);
-  const placa = veiculo ? veiculo.placa : inputVeiculoAbast.value;
-
+  const placa = veiculo ? veiculo.placa : "";
   const tipoCombustivel = document.getElementById("combustivel").value;
-  const data = {
+
+  const dados = {
     veiculo_id: veiculoId,
     veiculo_placa: placa,
-    data: inputValue("inputDataAbast"),
+    data: obterValorInput("inputDataAbast"),
     tipo_combustivel: tipoCombustivel,
-    posto: inputValue("inputPosto"),
-    litros: inputValue("inputLitros"),
-    valor: inputValue("inputValor")
+    posto: obterValorInput("inputPosto"),
+    litros: obterValorInput("inputLitros"),
+    valor: obterValorInput("inputValor")
   };
 
-  const method = abastecimentoEditandoId ? "PUT" : "POST";
-  const url = abastecimentoEditandoId ? `${API}/abastecimentos/${abastecimentoEditandoId}` : `${API}/abastecimentos`;
+  const caminho = abastecimentoEditandoId ? `/abastecimentos/${abastecimentoEditandoId}` : "/abastecimentos";
 
   try {
-    const res = await fetch(url, {
-      method,
+    const resposta = await fazerRequisicao(caminho, {
+      method: abastecimentoEditandoId ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
+      body: JSON.stringify(dados)
     });
-    if (!res.ok) throw new Error("API failed");
-  } catch (err) {
+    if (!resposta.ok) throw new Error("API falhou");
+  } catch (erro) {
     console.warn("Backend offline, salvando abastecimento no cache local");
     if (abastecimentoEditandoId) {
       const idx = abastecimentosCache.findIndex(a => a.id == abastecimentoEditandoId);
-      if (idx > -1) abastecimentosCache[idx] = { ...abastecimentosCache[idx], ...data };
+      if (idx > -1) abastecimentosCache[idx] = { ...abastecimentosCache[idx], ...dados };
     } else {
-      const newId = abastecimentosCache.length > 0 ? Math.max(...abastecimentosCache.map(a => a.id)) + 1 : 1;
-      abastecimentosCache.push({ id: newId, ...data });
+      const novoId = abastecimentosCache.length > 0 ? Math.max(...abastecimentosCache.map(a => a.id)) + 1 : 1;
+      abastecimentosCache.push({ id: newId, ...dados });
     }
   }
 
-  resetAbastecimentoForm();
-  loadAbastecimentos();
+  limparFormularioAbastecimento();
+  carregarAbastecimentos();
 };
